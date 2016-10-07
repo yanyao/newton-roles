@@ -1,0 +1,97 @@
+---
+# Copyright 2016, Logan Vig <logan2211@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Set fact for automatically enabling networks (IPv4)
+  set_fact:
+    bird_ipv4_enabled: True
+  when:
+    - "{{ bird_ipv4_enabled is not defined }}"
+    - "{{ ansible_default_ipv4 is defined }}"
+
+- name: Set fact for automatically enabling networks (IPv6)
+  set_fact:
+    bird_ipv6_enabled: True
+  when:
+    - "{{ bird_ipv6_enabled is not defined }}"
+    - "{{ ansible_default_ipv6 is defined }}"
+    - "{{ ansible_default_ipv6['scope'] is defined }}"
+    - "{{ ansible_default_ipv6['scope'] == 'global' }}"
+
+- name: Drop bird configuration files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: bird_results
+  when: "{{ item.enabled | bool }}"
+  with_items:
+    - src: "bird.conf.j2"
+      dest: "/etc/bird/bird.conf"
+      network: "ipv4"
+      service: "bird"
+      enabled: "{{ bird_ipv4_enabled | default('False') }}"
+    - src: "bird6.conf.j2"
+      dest: "/etc/bird/bird6.conf"
+      network: "ipv6"
+      service: "bird6"
+      enabled: "{{ bird_ipv6_enabled | default('False') }}"
+  tags:
+    - bird-config
+
+- name: Disable inactive BIRD BGP services and remove from bootup start
+  service:
+   name: "{{ item.service }}"
+   enabled: no
+   state: stopped
+  when: "{{ not item.enabled | bool }}"
+  with_items:
+    - service: bird
+      network: ipv4
+      enabled: "{{ bird_ipv4_enabled | default('False') }}"
+    - service: bird6
+      network: ipv6
+      enabled: "{{ bird_ipv6_enabled | default('False') }}"
+  tags:
+    - upstart-init
+    - bird-init
+
+- name: Start active BIRD BGP services and add to bootup start
+  service:
+   name: "{{ item.service }}"
+   enabled: yes
+   state: started
+  when: "{{ item.enabled | bool }}"
+  with_items:
+    - service: bird
+      network: ipv4
+      enabled: "{{ bird_ipv4_enabled | default('False') }}"
+    - service: bird6
+      network: ipv6
+      enabled: "{{ bird_ipv6_enabled | default('False') }}"
+  tags:
+    - upstart-init
+    - bird-init
+
+- name: Restart bird services
+  service:
+    name: "{{ item.item.service }}"
+    state: restarted
+  when: item.changed
+  with_items: bird_results.results
+  tags:
+    - upstart-init
+    - bird-init

@@ -1,0 +1,31 @@
+---
+# Copyright 2016, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Gather facts
+  hosts: "all"
+  user: root
+  gather_facts: true
+
+# NOTE(mancdaz): rabbitmq cannot be upgraded in serial, so when
+# rabbitmq_upgrade=True, serial is set to 0, else it is 1 for installs
+- name: Install RabbitMQ server
+  hosts: "{{ rabbitmq_host_group }}"
+  serial: "{{ rabbitmq_upgrade|default(false) | bool | ternary(0, 1)}}"
+  user: root
+  gather_facts: True
+  roles:
+    - role: rabbitmq_server
+  vars_files:
+    - test-vars.yml
