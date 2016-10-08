@@ -13,6 +13,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Create lxc cache path (yanyao)
+  file:
+    path: "{{ lxc_container_cache_path }}/{{ lxc_cache_map.distro }}/{{ lxc_cache_map.release }}/{{ lxc_cache_map.arch }}/default"
+    state: "directory"
+  tags:
+    - lxc-cache
+    - lxc-cache-download
+
+- name: Download container rootfs from local repo (yanyao)
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ lxc_container_cache_path }}/{{ lxc_cache_map.distro }}/{{ lxc_cache_map.release }}/{{ lxc_cache_map.arch }}/default/{{ item.name }}"
+    mode: "0644"
+    force: yes
+    sha256sum: "{{ item.sha256sum }}"
+  register: cache_download
+  retries: 3
+  delay: 10
+  until: cache_download | success
+  with_items: lxc_container_caches
+  when: >
+    lxc_container_caches is defined
+  tags:
+    - lxc-cache
+    - lxc-cache-download
+
+- name: Move lxc cached image into place (yanyao)
+  unarchive:
+    src: "{{ lxc_container_cache_path }}/{{ lxc_cache_map.distro }}/{{ lxc_cache_map.release }}/{{ lxc_cache_map.arch }}/default/{{ item.name }}"
+    dest: "{{ lxc_container_cache_path }}/{{ lxc_cache_map.distro }}/{{ lxc_cache_map.release }}/{{ lxc_cache_map.arch }}/default/"
+    copy: "no"
+  with_items: lxc_container_caches
+  when: >
+    cache_download | changed 
+  tags:
+    - lxc-cache
+    - lxc-cache-unarchive
+
+  
 - name: Create base container
   lxc_container:
     name: "LXC_NAME"
