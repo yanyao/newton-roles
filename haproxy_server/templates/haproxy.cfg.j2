@@ -34,5 +34,4 @@ listen stats
     stats show-legends
     stats auth {{ haproxy_username }}:{{ haproxy_stats_password }}
     stats admin if TRUE
-    stats refresh 60s
 {% endif %}

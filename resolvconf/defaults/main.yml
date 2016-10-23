@@ -17,3 +17,4 @@ resolvconf_resolver_group: dns-servers
 resolvconf_resolver_ips: []
 resolvconf_search_domains: []
 resolvconf_options: []
+resolvconf_packages: []

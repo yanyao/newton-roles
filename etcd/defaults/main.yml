@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+etcd_package_state: latest
+
 etcd_cluster_group: etcd
 #install type can be server or proxy. servers join the cluster as full members, while proxies operate as cluster clients
 etcd_install_type: server

@@ -95,6 +95,10 @@
     - swift-config
     - swift-install
 
+- include: swift_init_common.yml
+  tags:
+    - swift-install
+
 - include: swift_service_setup.yml
   when:
     - inventory_hostname == groups['swift_all'][0]
@@ -102,9 +106,6 @@
     - swift_do_setup | bool
   tags:
     - swift-install
-
-- name: Flush handlers
-  meta: flush_handlers
 
 - include: swift_key_setup.yml
   static: no
@@ -118,6 +119,9 @@
   tags:
     - swift-install
     - swift-config
+
+- name: Flush handlers
+  meta: flush_handlers
 
 - include: swift_sync_post_install.yml
   static: no

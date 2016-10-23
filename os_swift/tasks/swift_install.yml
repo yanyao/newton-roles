@@ -123,10 +123,7 @@
     - not swift_developer_mode | bool
     - swift_get_venv | changed or swift_venv_dir | changed
   notify:
-    - Restart swift account services
-    - Restart swift container services
-    - Restart swift object services
-    - Restart swift proxy services
+    - Restart swift services
 
 - name: Install pip packages
   pip:
@@ -143,10 +140,7 @@
     - not swift_pypy_enabled | bool
     - swift_get_venv | failed or swift_developer_mode | bool
   notify:
-    - Restart swift account services
-    - Restart swift container services
-    - Restart swift object services
-    - Restart swift proxy services
+    - Restart swift services
 
 - name: Update virtualenv path
   command: >

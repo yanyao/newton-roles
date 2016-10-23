@@ -23,7 +23,11 @@
 
 - name: Load service
   service:
-   name: "{{ program_name }}"
+   name: "{{ item.value.program_name }}"
    enabled: "yes"
-   state: restarted
-  when: init_script|changed
+  with_dict: "{{ swift_services }}"
+  when:
+    - inventory_hostname in groups[item.value.group]
+    - "{{ item.value.service_en | default(true) }}"
+  notify:
+    - Restart swift services

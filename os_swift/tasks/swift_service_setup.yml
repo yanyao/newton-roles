@@ -104,13 +104,12 @@
     login_user: "{{ keystone_admin_user_name }}"
     login_password: "{{ keystone_auth_admin_password }}"
     login_project_name: "{{ keystone_admin_tenant_name }}"
-    role_name: "ResellerAdmin"
+    role_name: "{{ swift_reselleradmin_role }}"
     insecure: "{{ keystone_service_adminuri_insecure }}"
   register: add_role
   until: add_role|success
   retries: 5
   delay: 10
-  when: swift_ceilometer_enabled | bool
 
 - name: "Add ResellerAdmin role to the service tenant and ceilometer user"
   keystone:

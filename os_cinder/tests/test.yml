@@ -17,7 +17,7 @@
 - include: common/test-setup-host.yml
 
 # Prepare the cinder-volumes VG
-- include: test-prepare-vg.yml
+- include: common/test-setup-cinder-localhost.yml
 
 # Install RabbitMQ/MariaDB
 - include: common/test-install-infra.yml
@@ -26,7 +26,7 @@
 - include: common/test-install-keystone.yml
 
 # Install Cinder
-- include: test-install-cinder.yml
+- include: common/test-install-cinder.yml
 
 # Install Tempest
 - include: common/test-install-tempest.yml

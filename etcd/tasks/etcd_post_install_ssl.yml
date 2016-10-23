@@ -29,7 +29,8 @@
 
 - name: Ensure user CA cert dir exists
   file: path=/usr/local/share/ca-certificates state=directory
-  when: etcd_user_ssl_ca_cert is defined
+  when:
+    - "{{ etcd_user_ssl_ca_cert is defined }}"
   tags:
     - etcd-config
     - etcd-ssl
@@ -44,7 +45,8 @@
   notify: Update CA Cert index
   with_items:
     - { src: "{{ etcd_user_ssl_ca_cert }}", dest: "{{ etcd_ssl_ca_cert }}" }
-  when: etcd_user_ssl_ca_cert is defined
+  when:
+    - "{{ etcd_user_ssl_ca_cert is defined }}"
   tags:
     - etcd-config
     - etcd-ssl

@@ -36,10 +36,7 @@
       config_overrides: "{{ swift_memcache_conf_overrides }}"
       config_type: "ini"
   notify:
-    - Restart swift account services
-    - Restart swift container services
-    - Restart swift object services
-    - Restart swift proxy services
+    - Restart swift services
 
 - name: Copy swift config
   template:
@@ -48,8 +45,5 @@
     owner: "{{ swift_system_user_name }}"
     group: "{{ swift_system_group_name }}"
   notify:
-    - Restart swift account services
-    - Restart swift container services
-    - Restart swift object services
-    - Restart swift proxy services
+    - Restart swift services
     - Restart rsyslog

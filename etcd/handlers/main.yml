@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Update CA Cert index
-  shell: /usr/sbin/update-ca-certificates
+  command: /usr/sbin/update-ca-certificates
 
 - name: Reload init scripts
   command: initctl reload-configuration

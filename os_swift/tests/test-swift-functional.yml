@@ -35,7 +35,6 @@
       role_name: "{{ item }}"
       insecure: "{{ keystone_service_adminuri_insecure }}"
     with_items:
-      - "ResellerAdmin"
       - "test-role"
       - "test5"
     run_once: true

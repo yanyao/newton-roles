@@ -20,16 +20,26 @@
   tags:
     - repo-clone-repos
 
+- name: Check if the git folder exists already
+  stat:
+    path: "{{ repo_build_git_dir }}"
+  register: _git_folder
+  tags:
+    - repo-clone-repos
+
+- name: Git service data folder setup
+  file:
+    path: "{{ (_git_folder.stat.exists and _git_folder.stat.islnk) | ternary(_git_folder.stat.lnk_source, repo_build_git_dir) }}"
+    state: "directory"
+    owner: "{{ repo_build_service_user_name }}"
+    group: "{{ repo_build_service_group_name }}"
+    recurse: true
+  tags:
+    - repo-clone-repos
+
 - name: Run clone process script
   shell: "bash /opt/op-clone-script.sh"
   become: yes
   become_user: "{{ repo_build_service_user_name }}"
-  tags:
-    - repo-clone-repos
-
-- name: Remove clone process script
-  file:
-    path: "/opt/op-clone-script.sh"
-    state: absent
   tags:
     - repo-clone-repos

@@ -16,13 +16,11 @@
 - name: Place the init script
   template:
     src: "swift-upstart-init.j2"
-    dest: "/etc/init/{{ program_name }}.conf"
+    dest: "/etc/init/{{ item.value.program_name }}.conf"
     mode: "0644"
     owner: "root"
     group: "root"
-  register: init_script
-
-- name: Reload init scripts
-  shell: |
-    initctl reload-configuration
-  when: init_script|changed
+  with_dict: "{{ swift_services }}"
+  when: inventory_hostname in groups[item.value.group]
+  notify:
+    - Reload upstart init scripts

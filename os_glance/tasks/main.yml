@@ -50,7 +50,7 @@
     - glance-install
     - glance-config
 
-- include: glance_init.yml
+- include: glance_init_common.yml
   tags:
     - glance-install
 

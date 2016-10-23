@@ -169,19 +169,6 @@ swift_rabbitmq_telemetry_servers: "127.0.0.1"
 # For now swift ceilometer does not work with SSL - this is a speculative option in the hope it gets added
 swift_rabbitmq_telemetry_use_ssl: "False"
 
-swift_account_server_program_config_options: /etc/swift/account-server/account-server.conf
-swift_account_replicator_program_config_options: /etc/swift/account-server/account-server-replicator.conf
-
-swift_container_server_program_config_options: /etc/swift/container-server/container-server.conf
-swift_container_replicator_program_config_options: /etc/swift/container-server/container-server-replicator.conf
-swift_container_reconciler_program_config_options: /etc/swift/container-server/container-reconciler.conf
-
-swift_object_server_program_config_options: /etc/swift/object-server/object-server.conf
-swift_object_replicator_program_config_options: /etc/swift/object-server/object-server-replicator.conf
-swift_object_expirer_program_config_options: /etc/swift/object-server/object-expirer.conf
-
-swift_proxy_server_program_config_options: /etc/swift/proxy-server/proxy-server.conf
-
 ## General Swift configuration
 # If ``swift_account_server_replicator_workers`` is unset the system will use half the number
 # of available VCPUS to compute the number of api workers to use.
@@ -299,32 +286,89 @@ swift_pip_packages:
   - python-swiftclient
   - swift
 
-swift_account_program_names:
-  - swift-account-server
-  - swift-account-auditor
-  - swift-account-replicator
-  - swift-account-reaper
-  - swift-account-replicator-server
-
-swift_container_program_names:
-  - swift-container-server
-  - swift-container-auditor
-  - swift-container-replicator
-  - swift-container-sync
-  - swift-container-updater
-  - swift-container-replicator-server
-  - swift-container-reconciler
-
-swift_object_program_names:
-  - swift-object-server
-  - swift-object-auditor
-  - swift-object-replicator
-  - swift-object-updater
-  - swift-object-replicator-server
-  - swift-object-expirer
-
-swift_proxy_program_names:
-  - swift-proxy-server
+swift_services:
+  swift-account-replicator:
+    group: swift_acc
+    program_name: "swift-account-replicator"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/account-server/account-server-replicator.conf', '/etc/swift/account-server/account-server.conf') }}"
+  swift-account-replicator-server:
+    group: swift_acc
+    program_name: "swift-account-replicator-server"
+    program_binary: "swift-account-server"
+    program_config_options: "/etc/swift/account-server/account-server-replicator.conf"
+    service_en: "{{ swift_dedicated_replication | bool }}"
+  swift-account-server:
+    group: swift_acc
+    program_name: "swift-account-server"
+    program_config_options: "/etc/swift/account-server/account-server.conf"
+  swift-account-auditor:
+    group: swift_acc
+    program_name: "swift-account-auditor"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/account-server/account-server-replicator.conf', '/etc/swift/account-server/account-server.conf') }}"
+  swift-account-reaper:
+    group: swift_acc
+    program_name: "swift-account-reaper"
+    program_config_options: "/etc/swift/account-server/account-server.conf"
+  swift-container-replicator:
+    group: swift_cont
+    program_name: "swift-container-replicator"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/container-server/container-server-replicator.conf', '/etc/swift/container-server/container-server.conf') }}"
+  swift-container-replicator-server:
+    group: swift_cont
+    program_name: "swift-container-replicator-server"
+    program_binary: "swift-container-server"
+    program_config_options: "/etc/swift/container-server/container-server-replicator.conf"
+    service_en: "{{ swift_dedicated_replication | bool }}"
+  swift-container-server:
+    group: swift_cont
+    program_name: "swift-container-server"
+    program_config_options: "/etc/swift/container-server/container-server.conf"
+  swift-container-auditor:
+    group: swift_cont
+    program_name: "swift-container-auditor"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/container-server/container-server-replicator.conf', '/etc/swift/container-server/container-server.conf') }}"
+  swift-container-sync:
+    group: swift_cont
+    program_name: "swift-container-sync"
+    program_config_options: "/etc/swift/container-server/container-server.conf"
+  swift-container-updater:
+    group: swift_cont
+    program_name: "swift-container-updater"
+    program_config_options: "/etc/swift/container-server/container-server.conf"
+  swift-container-reconciler:
+    group: swift_cont
+    program_name: "swift-container-reconciler"
+    program_config_options: "/etc/swift/container-server/container-reconciler.conf"
+  swift-object-replicator:
+    group: swift_obj
+    program_name: "swift-object-replicator"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/object-server/object-server-replicator.conf', '/etc/swift/object-server/object-server.conf') }}"
+  swift-object-replicator-server:
+    group: swift_obj
+    program_name: "swift-object-replicator-server"
+    program_binary: "swift-object-server"
+    program_config_options: "/etc/swift/object-server/object-server-replicator.conf"
+    service_en: "{{ swift_dedicated_replication | bool }}"
+  swift-object-server:
+    group: swift_obj
+    program_name: "swift-object-server"
+    program_config_options: "/etc/swift/object-server/object-server.conf"
+  swift-object-auditor:
+    group: swift_obj
+    program_name: "swift-object-auditor"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/object-server/object-server-replicator.conf', '/etc/swift/object-server/object-server.conf') }}"
+  swift-object-updater:
+    group: swift_obj
+    program_name: "swift-object-updater"
+    program_config_options: "/etc/swift/object-server/object-server.conf"
+  swift-object-expirer:
+    group: swift_obj
+    program_name: "swift-object-expirer"
+    program_config_options: "/etc/swift/object-server/object-expirer.conf"
+  swift-proxy-server:
+    group: swift_proxy
+    program_name: "swift-proxy-server"
+    program_config_options: "/etc/swift/proxy-server/proxy-server.conf"
 
 # Set to True to reset the clock on the last time a rebalance happened,
 # circumventing the min_part_hours check.

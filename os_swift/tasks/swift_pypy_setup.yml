@@ -66,10 +66,7 @@
   retries: 5
   delay: 2
   notify:
-    - Restart swift account services
-    - Restart swift container services
-    - Restart swift object services
-    - Restart swift proxy services
+    - Restart swift services
 
 - name: Mark swift venv for use with pypy
   file:

@@ -31,6 +31,7 @@ repo_build_use_upper_constraints: true
 repo_build_upper_constraints_overrides: []
 
 repo_build_service_user_name: "nginx"
+repo_build_service_group_name: "www-data"
 repo_build_base_path: "/var/www/repo"
 
 repo_build_global_links_path: "/var/www/repo/links"
@@ -93,5 +94,6 @@ repo_pip_packages:
   - wheel
   - virtualenv
   - virtualenv-tools
+  - cython
 
 repo_build_store_pip_sources: false

@@ -68,8 +68,7 @@
       config_overrides: "{{ glance_glance_scheme_json_overrides }}"
       config_type: "json"
   notify:
-    - Restart glance api
-    - Restart glance registry
+    - Restart glance services
 
 - name: Create nfs shares local path
   file:

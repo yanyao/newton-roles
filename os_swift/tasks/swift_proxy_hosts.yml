@@ -36,17 +36,6 @@
     - swift_gnocchi_enabled | bool
     - get_gnocchi_project | success
 
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-proxy-server"
-    program_config_options: "{{ swift_proxy_server_program_config_options }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-  tags:
-    - swift-install
-
 - name: swift proxy server configuration
   config_template:
     src: "proxy-server.conf.j2"
@@ -56,7 +45,7 @@
     mode: "0644"
     config_overrides: "{{ swift_proxy_server_conf_overrides }}"
     config_type: "ini"
-  notify: Restart swift proxy services
+  notify: Restart swift services
   tags:
     - swift-config
 
@@ -72,6 +61,6 @@
     config_type: "ini"
   when: >
     swift_container_sync_realms is defined
-  notify: Restart swift proxy services
+  notify: Restart swift services
   tags:
     - swift-config

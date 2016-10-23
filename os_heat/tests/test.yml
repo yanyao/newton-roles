@@ -24,3 +24,5 @@
 
 # Install Heat
 - include: test-install-heat.yml
+
+- include: test-heat-functional.yml

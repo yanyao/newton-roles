@@ -93,11 +93,9 @@ glance_galera_user: glance
 glance_role_name: admin
 glance_api_bind_address: 0.0.0.0
 glance_api_service_port: 9292
-glance_api_program_name: glance-api
 
 glance_registry_bind_address: 0.0.0.0
 glance_registry_service_port: 9191
-glance_registry_program_name: glance-registry
 
 ## Service Type and Data
 glance_service_region: RegionOne
@@ -211,9 +209,13 @@ glance_pip_packages:
   - warlock
 
 ## Service Names
-glance_service_names:
-  - "glance-api"
-  - "glance-registry"
+glance_services:
+  glance-api:
+    group: glance_api
+    service_name: glance-api
+  glance-registry:
+    group: glance_registry
+    service_name: glance-registry
 
 # This variable is used by the repo_build process to determine
 # which host group to check for members of before building the

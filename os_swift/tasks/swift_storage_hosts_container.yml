@@ -13,81 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# When using a replication network use the specific replicator configuration
-# When not using a replication network use the default configuration
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-replicator"
-    program_config_options: "{{ swift_dedicated_replication | ternary(
-               swift_container_replicator_program_config_options,
-               swift_container_server_program_config_options) }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
-# When using a replication network create a second server for dedicated replicator configuration
-# This will be a blank file if not using dedicated replication network to prevent errors
-# when the service attempts to start.
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-replicator-server"
-    program_binary: "swift-container-server"
-    program_config_options: "{{ swift_container_replicator_program_config_options }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-server"
-    program_config_options: "{{ swift_container_server_program_config_options }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
-# The auditor needs to point at the replicator configuration.
-# # When using a dedicated replication network that means the dedicated conf file.
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-auditor"
-    program_config_options: "{{ swift_dedicated_replication | ternary(
-               swift_container_replicator_program_config_options,
-               swift_container_server_program_config_options) }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-sync"
-    program_config_options: "{{ swift_container_server_program_config_options }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-updater"
-    program_config_options: "{{ swift_container_server_program_config_options }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
-- include: swift_init_common.yml
-  vars:
-    program_name: "swift-container-reconciler"
-    program_config_options: "{{ swift_container_reconciler_program_config_options }}"
-    service_name: "{{ swift_service_name }}"
-    system_user: "{{ swift_system_user_name }}"
-    system_group: "{{ swift_system_group_name }}"
-    service_home: "{{ swift_system_home_folder }}"
-
 - name: "Swift container server configuration"
   config_template:
     src: "{{ item.src }}"
@@ -106,7 +31,7 @@
       dest: "/etc/swift/container-server/container-reconciler.conf"
       config_overrides: "{{ swift_container_reconciler_conf_overrides }}"
       config_type: "ini"
-  notify: Restart swift container services
+  notify: Restart swift services
 
 # If we've specified a container-sync realm use container-sync-realms.conf
 - name: "Swift container-sync configuration"
@@ -120,7 +45,7 @@
     config_type: "ini"
   when:
     - swift_container_sync_realms is defined
-  notify: Restart swift container services
+  notify: Restart swift services
 
 # We only create the dedicated replicator configuration when using a dedicated replication_network
 - name: "Swift container server replicator configuration"
@@ -133,7 +58,7 @@
     config_overrides: "{{ swift_container_server_replicator_conf_overrides }}"
     config_type: "ini"
   when: swift_dedicated_replication
-  notify: Restart swift container services
+  notify: Restart swift services
 
 # Remove the dedicated replicator configuration when no dedicated replication network in use
 - name: "Remove dedicated replicator configuration"

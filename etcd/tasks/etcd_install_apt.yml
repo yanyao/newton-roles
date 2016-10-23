@@ -27,14 +27,6 @@
   tags:
     - etcd-apt-packages
 
-- name: Ensure host can talk to HTTPS apt repos
-  apt:
-    pkg: "apt-transport-https"
-    state: latest
-    update_cache: yes
-  tags:
-    - etcd-apt-packages
-
 - name: Add calico PPA apt-keys
   apt_key:
     id: "{{ item.hash_id }}"
@@ -99,7 +91,7 @@
 - name: Install etcd packages
   apt:
     pkg: "{{ item }}"
-    state: latest
+    state: "{{ etcd_package_state }}"
   register: install_packages
   until: install_packages | success
   retries: 5

@@ -19,7 +19,10 @@
     - etcd-config
 
 - include: etcd_post_install_ssl.yml
-  when: etcd_user_ssl_cert is defined and etcd_user_ssl_key is defined
+  static: no
+  when:
+    - "{{ etcd_user_ssl_cert is defined }}"
+    - "{{ etcd_user_ssl_key is defined }}"
 
 - name: Ensure etcd data directory exists
   file:
@@ -44,7 +47,7 @@
   meta: flush_handlers
 
 - name: Verify etcd cluster health
-  shell: "etcdctl cluster-health"
+  command: etcdctl cluster-health
   register: etcd_health
   failed_when: etcd_health.rc != 0
   until: etcd_health|success

@@ -134,9 +134,9 @@ local_packages:
         - egg_name: calico
           fragment: null
           name: calico
-          original: git+https://github.com/projectcalico/calico@a2daf3725e33a76bdb01c0311d5827f159969a29#egg=calico&gitname=calico&projectgroup=neutron_all
+          original: git+https://github.com/projectcalico/felix@a2daf3725e33a76bdb01c0311d5827f159969a29#egg=calico&gitname=calico&projectgroup=neutron_all
           project_group: neutron_all
-          url: https://github.com/projectcalico/calico
+          url: https://github.com/projectcalico/felix
           version: a2daf3725e33a76bdb01c0311d5827f159969a29
         - egg_name: ceilometer
           fragment: null
@@ -372,7 +372,7 @@ local_packages:
         - git+https://git.openstack.org/openstack/tempest@479bfaccf5b1db53afb9f0663de7544b25c4bca7#egg=tempest&gitname=tempest&projectgroup=utility_all
         - git+https://github.com/SPICE/spice-html5@54cc41299bea8cd681ed0262735e0fd821cd774a#egg=spice_html5&gitname=spice-html5&projectgroup=nova_console
         - git+https://github.com/kanaka/novnc@7a16304e52b3fbd466337601f05a7def2493c563#egg=novnc&gitname=novnc&projectgroup=nova_console
-        - git+https://github.com/projectcalico/calico@a2daf3725e33a76bdb01c0311d5827f159969a29#egg=calico&gitname=calico&projectgroup=neutron_all
+        - git+https://github.com/projectcalico/felix@a2daf3725e33a76bdb01c0311d5827f159969a29#egg=calico&gitname=calico&projectgroup=neutron_all
         role_distro_packages:
           bird:
             main:
