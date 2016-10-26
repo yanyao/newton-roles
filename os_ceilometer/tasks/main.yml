@@ -57,7 +57,7 @@
     - ceilometer-install
     - ceilometer-config
 
-- include: ceilometer_init.yml
+- include: ceilometer_init_common.yml
   tags:
     - ceilometer-install
 

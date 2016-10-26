@@ -14,16 +14,16 @@
 # limitations under the License.
 
 - include: ceilometer_init_upstart.yml
-  static: no
   when: pid1_name == "init"
 
 - include: ceilometer_init_systemd.yml
-  static: no
   when: pid1_name == "systemd"
 
 - name: Load service
   service:
-   name: "{{ program_name }}"
+   name: "{{ item.value.service_name }}"
    enabled: "yes"
+  with_dict: "{{ ceilometer_services }}"
+  when: inventory_hostname in groups[item.value.group]
   notify:
     - Restart ceilometer services

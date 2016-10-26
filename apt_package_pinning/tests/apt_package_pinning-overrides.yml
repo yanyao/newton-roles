@@ -1,5 +1,5 @@
 ---
-# Copyright 2015, Rackspace US, Inc.
+# Copyright 2016, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Place the init script
-  template:
-    src: "ceilometer-upstart-init.j2"
-    dest: "/etc/init/{{ item.value.service_name }}.conf"
-    mode: "0644"
-    owner: "root"
-    group: "root"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
-  notify:
-    - Reload upstart init scripts
+apt_package_pinning_file_name: test.pref
+apt_pinned_packages:
+  - package: "test-package-version"
+    version: "9.9.9-version"
+  - package: "test-package-origin"
+    origin: "test-origin.org"
+  - package: "test-package-release.*"
+    release: "TestRelease"

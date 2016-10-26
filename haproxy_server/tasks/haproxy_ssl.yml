@@ -13,7 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Playbook for role testing (check mode)
-  hosts: localhost
-  roles:
-    - role: "openstack-ansible-security"
+- name: Ensure the private ssl directory exists
+  file:
+    dest: "/etc/ssl/private"
+    state: "directory"
+  tags:
+    - haproxy-ssl
+
+- include: haproxy_ssl_self_signed.yml
+  when:
+    - haproxy_ssl | bool
+    - haproxy_user_ssl_cert is not defined or haproxy_user_ssl_key is not defined
+
+- include: haproxy_ssl_user_provided.yml

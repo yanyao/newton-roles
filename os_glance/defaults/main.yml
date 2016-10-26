@@ -197,15 +197,16 @@ glance_requires_pip_packages:
 
 # Common pip packages
 glance_pip_packages:
-  - glance
   - keystonemiddleware
-  - PyMySQL
-  - python-memcached
+  - glance
+  - os-brick
   - pycrypto
-  - python-glanceclient
-  - python-swiftclient
+  - PyMySQL
   - python-cinderclient
+  - python-glanceclient
   - python-keystoneclient
+  - python-memcached
+  - python-swiftclient
   - warlock
 
 ## Service Names

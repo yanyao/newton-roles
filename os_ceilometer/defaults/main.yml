@@ -79,12 +79,6 @@ ceilometer_rabbitmq_host_group: "rabbitmq_all"
 #Ceilometer services info
 ceilometer_role_name: admin
 
-ceilometer_collector_program_name: ceilometer-collector
-ceilometer_compute_program_name: ceilometer-agent-compute
-ceilometer_api_program_name: ceilometer-api
-ceilometer_agent_notification_program_name: ceilometer-agent-notification
-ceilometer_polling_program_name: ceilometer-polling
-
 ## Service Type and Data
 ceilometer_service_region: RegionOne
 ceilometer_service_name: ceilometer
@@ -153,12 +147,17 @@ ceilometer_pip_packages:
   - tooz
   - warlock
 
-## Service Names
-ceilometer_service_names:
-  - "ceilometer-api"
-  - "ceilometer-collector"
-  - "ceilometer-agent-notification"
-  - "ceilometer-polling"
+## Service Name-Group Mapping
+ceilometer_services:
+  ceilometer-collector:
+    group: ceilometer_collector
+    service_name: ceilometer-collector
+  ceilometer-agent-notification:
+    group: ceilometer_agent_notification
+    service_name: ceilometer-agent-notification
+  ceilometer-polling:
+    group: ceilometer_agent_central
+    service_name: ceilometer-polling
 
 ceilometer_required_secrets:
   - memcached_encryption_key

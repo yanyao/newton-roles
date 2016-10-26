@@ -27,8 +27,15 @@ infra1
 [keystone_all]
 infra1
 
-[glance_all]
-infra1
+[glance_api]
+openstack1
+
+[glance_registry]
+openstack1
+
+[glance_all:children]
+glance_api
+glance_registry
 
 [ceilometer_api]
 openstack1

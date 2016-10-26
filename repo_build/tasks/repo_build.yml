@@ -44,7 +44,7 @@
     --find-links {{ repo_build_global_links_path }}
     --find-links {{ repo_build_output }}
     --constraint {{ repo_build_release_path }}/{{ repo_build_release_tag }}/requirements_constraints.txt
-    {% if repo_build_pip_no_binary is defined %}--no-binary {{ repo_build_pip_no_binary | join(',') }}{% endif %}
+    {% if repo_build_pip_no_binary is defined %}--no-binary {{ repo_build_pip_no_binary | join(' --no-binary ') }}{% endif %}
     {% if repo_build_pip_default_index is defined %}--index-url {{ repo_build_pip_default_index }}
     --trusted-host {{ repo_build_pip_default_index | netloc_no_port }}{% endif %}
     {% if repo_build_pip_extra_index is defined %}--extra-index-url {{ repo_build_pip_extra_index }}

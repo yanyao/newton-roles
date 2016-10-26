@@ -13,24 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Playbook for role testing
-  hosts: localhost
-  roles:
-    - role: "openstack_openrc"
-  post_tasks:
-    - name: Check /root/openrc file
-      stat:
-        path: /root/openrc
-      register: openrc_file
-    - name: Check role functions
-      assert:
-        that:
-          - "openrc_file.stat.exists"
-    - name: Check /root/.config/openstack/clouds.yaml file
-      stat:
-        path: /root/.config/openstack/clouds.yaml
-      register: clouds_file
-    - name: Check role functions
-      assert:
-        that:
-          - "clouds_file.stat.exists"
+- name: Store ssl cert
+  slurp:
+    src: "{{ haproxy_ssl_cert }}"
+  register: _haproxy_ssl_cert
+  changed_when: false
+
+- name: Store ssl key
+  slurp:
+    src: "{{ haproxy_ssl_key }}"
+  register: _haproxy_ssl_key
+  changed_when: false
+
+- name: Register a fact for the cert and key
+  set_fact:
+    haproxy_ssl_cert_fact: "{{ _haproxy_ssl_cert.content }}"
+    haproxy_ssl_key_fact: "{{ _haproxy_ssl_key.content }}"
