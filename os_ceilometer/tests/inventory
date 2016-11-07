@@ -28,10 +28,10 @@ infra1
 infra1
 
 [glance_api]
-openstack1
+infra1
 
 [glance_registry]
-openstack1
+infra1
 
 [glance_all:children]
 glance_api
