@@ -19,8 +19,6 @@ cinder_package_state: "latest"
 
 cinder_git_repo: https://git.openstack.org/openstack/cinder
 cinder_git_install_branch: stable/newton
-cinder_requirements_git_repo: https://git.openstack.org/openstack/requirements
-cinder_requirements_git_install_branch: stable/newton
 cinder_developer_mode: false
 cinder_developer_constraints:
   - "git+{{ cinder_git_repo }}@{{ cinder_git_install_branch }}#egg=cinder"
@@ -72,6 +70,8 @@ cinder_system_group_name: cinder
 cinder_system_comment: cinder system user
 cinder_system_shell: /bin/false
 cinder_system_home_folder: "/var/lib/{{ cinder_system_user_name }}"
+
+cinder_lock_path: /var/lock/cinder
 
 ## Cinder Auth
 cinder_service_admin_tenant_name: "service"
@@ -158,6 +158,8 @@ cinder_iscsi_port: 3260
 
 ## Cinder RPC
 cinder_rpc_backend: rabbit
+cinder_rpc_executor_thread_pool_size: 64
+cinder_rpc_response_timeout: 60
 
 # (StrOpt) Method used to wipe old volumes (valid options are: none, zero,
 # shred)

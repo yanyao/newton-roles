@@ -27,10 +27,6 @@ ceilometer_developer_mode: false
 ceilometer_git_repo: https://git.openstack.org/openstack/ceilometer
 ceilometer_git_install_branch: stable/newton
 
-## The git source/branch for the upper-constraints (used in developer mode)
-ceilometer_requirements_git_repo: https://git.openstack.org/openstack/requirements
-ceilometer_requirements_git_install_branch: stable/newton
-
 ## The packages to build from source (used in developer mode)
 ceilometer_developer_constraints:
   - "git+{{ ceilometer_git_repo }}@{{ ceilometer_git_install_branch }}#egg=ceilometer"
@@ -122,6 +118,13 @@ sahara_ceilometer_enabled: false
 ceilometer_aodh_enabled: false
 ceilometer_gnocchi_enabled: false
 
+# Sampling interval for ceilometer-polling services
+ceilometer_sample_interval: 600
+ceilometer_meter_sample_interval: "{{ ceilometer_sample_interval }}"
+ceilometer_cpu_source_sample_interval: "{{ ceilometer_sample_interval }}"
+ceilometer_disk_source_sample_interval: "{{ ceilometer_sample_interval }}"
+ceilometer_network_source_sample_interval: "{{ ceilometer_sample_interval }}"
+
 ## Keystone authentication middleware
 ceilometer_keystone_auth_plugin: password
 
@@ -150,13 +153,17 @@ ceilometer_pip_packages:
 ## Service Name-Group Mapping
 ceilometer_services:
   ceilometer-collector:
-    group: ceilometer_collector
+    group:
+      - ceilometer_collector
     service_name: ceilometer-collector
   ceilometer-agent-notification:
-    group: ceilometer_agent_notification
+    group:
+      - ceilometer_agent_notification
     service_name: ceilometer-agent-notification
   ceilometer-polling:
-    group: ceilometer_agent_central
+    group:
+      - ceilometer_agent_central
+      - ceilometer_agent_compute
     service_name: ceilometer-polling
 
 ceilometer_required_secrets:

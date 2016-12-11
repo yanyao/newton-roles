@@ -47,6 +47,11 @@ rsync_module = {replication_ip}::object_{device}
 
 [object-auditor]
 log_facility = LOG_LOCAL4
+
+[object-reconstructor]
+log_facility = LOG_LOCAL4
+concurrency = 6
+reclaim_age = {{ reclaim_age | default(604800) }}
 {% endif %}
 
 [object-updater]

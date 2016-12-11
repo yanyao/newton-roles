@@ -24,18 +24,6 @@
   tags:
     - always
 
-- name: Check init system
-  command: cat /proc/1/comm
-  register: _pid1_name
-  tags:
-    - always
-
-- name: Set the name of pid1
-  set_fact:
-    pid1_name: "{{ _pid1_name.stdout }}"
-  tags:
-    - always
-
 - include: gnocchi_pre_install.yml
   tags:
     - gnocchi-install
@@ -51,7 +39,7 @@
     - gnocchi-install
     - gnocchi-config
 
-- include: gnocchi_init.yml
+- include: gnocchi_init_common.yml
   static: no
   when: not gnocchi_identity_only | bool
   tags:

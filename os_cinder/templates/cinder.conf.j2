@@ -49,6 +49,9 @@ backup_ceph_pool = {{ cinder_service_backup_ceph_pool }}
 
 ## RabbitMQ RPC
 rpc_backend = {{ cinder_rpc_backend }}
+executor_thread_pool_size = {{ cinder_rpc_executor_thread_pool_size }}
+rpc_response_timeout = {{ cinder_rpc_response_timeout }}
+
 transport_url = rabbit://{% for host in cinder_rabbitmq_servers.split(',') %}{{ cinder_rabbitmq_userid }}:{{ cinder_rabbitmq_password }}@{{ host }}:{{ cinder_rabbitmq_port }}{% if not loop.last %},{% else %}/{{ cinder_rabbitmq_vhost }}{% endif %}{% endfor %}
 
 ## Quota
@@ -119,11 +122,12 @@ transport_url = rabbit://{% for host in cinder_rabbitmq_telemetry_servers.split(
 {% endif %}
 
 [oslo_concurrency]
-lock_path = /var/lock/cinder
+lock_path = {{ cinder_lock_path }}
 
 [profiler]
 profiler_enabled = {{ cinder_profiler_enabled }}
 trace_sqlalchemy = {{ cinder_profiler_trace_sqlalchemy }}
+hmac_keys = {{ cinder_profiler_hmac_key }}
 
 [keymgr]
 encryption_auth_url = {{ keystone_service_internaluri }}/v3

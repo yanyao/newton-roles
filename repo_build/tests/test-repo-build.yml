@@ -120,7 +120,7 @@
     - name: Ensure that upper constraints from the OpenStack requirements repo are complete
       assert:
         that: item in requirements_constraints_content
-      with_items: upper_constraints_list
+      with_items: "{{ upper_constraints_list }}"
       when:
         - repo_build_use_upper_constraints | bool
         - item | regex_replace('(\[|>=|<=|>|<|==|~=|!=).*$','') not in upper_constraints_override_list

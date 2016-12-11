@@ -22,8 +22,6 @@ glance_package_state: "latest"
 
 glance_git_repo: https://git.openstack.org/openstack/glance
 glance_git_install_branch: stable/newton
-glance_requirements_git_repo: https://git.openstack.org/openstack/requirements
-glance_requirements_git_install_branch: stable/newton
 glance_developer_mode: false
 glance_developer_constraints:
   - "git+{{ glance_git_repo }}@{{ glance_git_install_branch }}#egg=glance"

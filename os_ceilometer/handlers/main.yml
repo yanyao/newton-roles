@@ -19,18 +19,19 @@
     - Restart ceilometer services
 
 - name: Reload upstart init scripts
-  shell: |
-    initctl reload-configuration
+  command: initctl reload-configuration
   notify:
     - Restart ceilometer services
 
 - name: Restart ceilometer services
   service:
-    name: "{{ item.value.service_name }}"
+    name: "{{ item.0.service_name }}"
     state: "restarted"
-    pattern: "{{ item.value.service_name }}"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
+    pattern: "{{ item.0.service_name }}"
+  with_subelements:
+    - "{{ ceilometer_services }}"
+    - group
+  when: inventory_hostname in groups[item.1]
 
 - name: Restart Apache
   service:

@@ -23,92 +23,40 @@
       {% for item in neutron_developer_constraints %}
       {{ item }}
       {% endfor %}
-  when:
-    - neutron_developer_mode | bool
-
-- name: Clone requirements git repository
-  git:
-    repo: "{{ neutron_requirements_git_repo }}"
-    dest: "/opt/requirements"
-    clone: yes
-    update: yes
-    version: "{{ neutron_requirements_git_install_branch }}"
-  when:
-    - neutron_developer_mode | bool
-
-- name: Add constraints to pip_install_options fact for developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }} --constraint /opt/developer-pip-constraints.txt --constraint /opt/requirements/upper-constraints.txt"
-  when:
-    - neutron_developer_mode | bool
-
-- name: Set pip_install_options_fact when not in developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }}"
-  when:
-    - not neutron_developer_mode | bool
+  when: neutron_developer_mode | bool
 
 - name: Install requires pip packages
   pip:
     name: "{{ neutron_requires_pip_packages | join(' ') }}"
     state: latest
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
 
-- name: Get local venv checksum
-  stat:
-    path: "/var/cache/{{ neutron_venv_download_url | basename }}"
-    get_md5: False
-  when:
-    - not neutron_developer_mode | bool
-  register: local_venv_stat
-
-- name: Get remote venv checksum
-  uri:
-    url: "{{ neutron_venv_download_url | replace('tgz', 'checksum') }}"
-    return_content: True
-  when:
-    - not neutron_developer_mode | bool
-  register: remote_venv_checksum
-
-# TODO: When project moves to ansible 2 we can pass this a sha256sum which will:
-#       a) allow us to remove force: yes
-#       b) allow the module to calculate the checksum of dest file which would
-#          result in file being downloaded only if provided and dest sha256sum
-#          checksums differ
 - name: Attempt venv download
   get_url:
     url: "{{ neutron_venv_download_url }}"
     dest: "/var/cache/{{ neutron_venv_download_url | basename }}"
-    force: yes
-  failed_when: false
-  register: get_venv
-  when:
-    - not neutron_developer_mode | bool
-    - (local_venv_stat.stat.exists == False or
-        {{ local_venv_stat.stat.checksum is defined and local_venv_stat.stat.checksum != remote_venv_checksum.content | trim }})
-
-- name: Set neutron get_venv fact
-  set_fact:
-    neutron_get_venv: "{{ get_venv }}"
+    checksum: "sha1:{{ lookup('url', neutron_venv_download_url | replace('tgz', 'checksum')) }}"
+  register: neutron_get_venv
+  when: not neutron_developer_mode | bool
 
 - name: Remove existing venv
   file:
     path: "{{ neutron_bin | dirname }}"
     state: absent
-  when:
-    - neutron_get_venv | changed
+  when: neutron_get_venv | changed
 
 - name: Create neutron venv dir
   file:
     path: "{{ neutron_bin | dirname }}"
     state: directory
   register: neutron_venv_dir
-  when:
-    - not neutron_developer_mode | bool
+  when: not neutron_developer_mode | bool
 
 - name: Unarchive pre-built venv
   unarchive:
@@ -126,18 +74,44 @@
     state: latest
     virtualenv: "{{ neutron_bin | dirname }}"
     virtualenv_site_packages: "no"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ neutron_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
-  when:
-    - neutron_get_venv | failed or neutron_developer_mode | bool
+  when: neutron_developer_mode | bool
   notify: Restart neutron services
 
 - name: Update virtualenv path
   command: >
-    virtualenv-tools --update-path=auto {{ neutron_bin | dirname }}
+    virtualenv-tools --update-path=auto --reinitialize {{ neutron_bin | dirname }}
   when:
     - not neutron_developer_mode | bool
-    - neutron_get_venv | success
+    - neutron_get_venv | changed or neutron_venv_dir | changed
+
+- name: Install optional pip packages
+  pip:
+    name: >-
+      {{ (neutron_bgp | bool) | ternary(neutron_optional_bgp_pip_packages | join(' '), '') }}
+      {{ (neutron_fwaas | bool) | ternary(neutron_optional_fwaas_pip_packages | join(' '), '') }}
+      {{ (neutron_lbaasv2 | bool) | ternary(neutron_optional_lbaas_pip_packages | join(' '), '') }}
+      {{ (neutron_vpnaas | bool) | ternary(neutron_optional_vpnaas_pip_packages | join(' '), '') }}
+    state: latest
+    virtualenv: "{{ neutron_bin | dirname }}"
+    virtualenv_site_packages: "no"
+    extra_args: >-
+      {{ neutron_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
+  when: neutron_bgp | bool or
+        neutron_fwaas | bool or
+        neutron_lbaasv2 | bool or
+        neutron_vpnaas | bool
+  register: install_packages
+  until: install_packages|success
+  retries: 5
+  delay: 2
+  notify: Restart neutron services

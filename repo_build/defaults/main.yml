@@ -44,10 +44,10 @@ repo_build_pool_dir: "/var/www/repo/pools"
 repo_build_release_tag: "untagged"
 
 # Toggle whether git repositories should be cloned selectively or not
-repo_build_git_selective: yes
+repo_build_git_selective: "{{ true if (repo_build_wheel_selective | bool and repo_build_venv_selective | bool) else false }}"
 
 # Toggle whether wheels should be built selectively or not
-repo_build_wheel_selective: yes
+repo_build_wheel_selective: "{{ true if repo_build_venv_selective | bool else false }}"
 
 # Toggle whether venvs should be built selectively or not
 repo_build_venv_selective: yes
@@ -75,7 +75,7 @@ repo_build_uca_enable: True
 uca_apt_repo_url: "http://ubuntu-cloud.archive.canonical.com/ubuntu"
 
 repo_build_timeout: 120
-repo_build_concurrency: "{{ ansible_processor_count if ansible_processor_count > 0 else 5}}"
+repo_build_concurrency: "{{ (((ansible_processor_vcpus|default(1)) | int) > 4) | ternary(8, 4) }}"
 repo_build_venv_build_dir: "/tmp/openstack-venv-builder"
 repo_build_venv_dir: "/var/www/repo/venvs"
 repo_build_venv_pip_install_options: >

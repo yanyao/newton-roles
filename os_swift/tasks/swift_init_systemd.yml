@@ -33,10 +33,10 @@
   with_dict: "{{ swift_services }}"
   when: inventory_hostname in groups[item.value.group]
 
-- name: Create tempfile.d entry
+- name: Create tmpfiles.d entry
   template:
-    src: "swift-systemd-tempfiles.j2"
-    dest: "/etc/tmpfiles.d/swift.conf"
+    src: "swift-systemd-tmpfiles.j2"
+    dest: "/etc/tmpfiles.d/{{ item.value.program_name }}.conf"
     mode: "0644"
     owner: "root"
     group: "root"

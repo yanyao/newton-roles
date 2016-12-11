@@ -43,10 +43,18 @@
   tags:
     - repo-create-pool
 
+- name: Copy get-pip script into release folder
+  copy:
+    src: "/opt/get-pip.py"
+    dest: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}/"
+    remote_src: yes
+  tags:
+    - repo-copy-pip
+
 - name: Index all manifest wheels
   shell: "ls -1 *.whl"
   args:
-    chdir: "{{ repo_build_release_path}}/{{ repo_build_release_tag }}"
+    chdir: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}"
   register: manifest_wheels
   tags:
     - repo-index-links
@@ -66,30 +74,8 @@
   tags:
     - repo-create-absolute-requirements
 
-- name: Index built wheels
-  command: "ls -1 {{ repo_build_release_path }}/{{ repo_build_release_tag }}"
-  register: indexed_links
-  tags:
-    - repo-index-links
-    - repo-create-release-index
-
-- name: Create release index
-  template:
-    src: "release_index_links.html.j2"
-    dest: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}/index.html"
-  tags:
-    - repo-create-release-index
-
-- name: Index general links
-  command: "ls -1 {{ repo_build_global_links_path }}"
-  register: global_indexed_links
-  tags:
-    - repo-index-links
-    - repo-create-global-release-index
-
-- name: Create release index
-  template:
-    src: "global_indexed_links.html.j2"
-    dest: "{{ repo_build_global_links_path }}/index.html"
-  tags:
-    - repo-create-global-release-index
+# TODO(odyssey4me): Remove this in Pike
+- name: Remove global links index file
+  file:
+    path: "{{ repo_build_global_links_path }}/index.html"
+    state: absent

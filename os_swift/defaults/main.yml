@@ -26,8 +26,6 @@ swift_package_state: "latest"
 
 swift_git_repo: https://git.openstack.org/openstack/swift
 swift_git_install_branch: stable/newton
-swift_requirements_git_repo: https://git.openstack.org/openstack/requirements
-swift_requirements_git_install_branch: stable/newton
 swift_developer_mode: false
 swift_developer_constraints:
   - "git+{{ swift_git_repo }}@{{ swift_git_install_branch }}#egg=swift"
@@ -365,6 +363,10 @@ swift_services:
     group: swift_obj
     program_name: "swift-object-expirer"
     program_config_options: "/etc/swift/object-server/object-expirer.conf"
+  swift-object-reconstructor:
+    group: swift_obj
+    program_name: "swift-object-reconstructor"
+    program_config_options: "{{ swift_dedicated_replication | ternary('/etc/swift/object-server/object-server-replicator.conf', '/etc/swift/object-server/object-server.conf') }}"
   swift-proxy-server:
     group: swift_proxy
     program_name: "swift-proxy-server"

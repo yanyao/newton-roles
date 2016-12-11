@@ -16,11 +16,13 @@
 - name: Place the init script
   template:
     src: "ceilometer-upstart-init.j2"
-    dest: "/etc/init/{{ item.value.service_name }}.conf"
+    dest: "/etc/init/{{ item.0.service_name }}.conf"
     mode: "0644"
     owner: "root"
     group: "root"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
+  with_subelements:
+    - "{{ ceilometer_services }}"
+    - group
+  when: inventory_hostname in groups[item.1]
   notify:
     - Reload upstart init scripts

@@ -15,42 +15,50 @@
 
 - name: Create TEMP run dir
   file:
-    path: "/var/run/{{ item.value.service_name }}"
+    path: "/var/run/{{ item.0.service_name }}"
     state: directory
     owner: "{{ ceilometer_system_user_name }}"
     group: "{{ ceilometer_system_group_name }}"
     mode: "02755"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
+  with_subelements:
+    - "{{ ceilometer_services }}"
+    - group
+  when: inventory_hostname in groups[item.1]
 
 - name: Create TEMP lock dir
   file:
-    path: "/var/lock/{{ item.value.service_name }}"
+    path: "/var/lock/{{ item.0.service_name }}"
     state: directory
     owner: "{{ ceilometer_system_user_name }}"
     group: "{{ ceilometer_system_group_name }}"
     mode: "02755"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
+  with_subelements:
+    - "{{ ceilometer_services }}"
+    - group
+  when: inventory_hostname in groups[item.1]
 
-- name: Create tempfile.d entry
+- name: Create tmpfiles.d entry
   template:
-    src: "ceilometer-systemd-tempfiles.j2"
-    dest: "/etc/tmpfiles.d/ceilometer.conf"
+    src: "ceilometer-systemd-tmpfiles.j2"
+    dest: "/etc/tmpfiles.d/{{ item.0.service_name }}.conf"
     mode: "0644"
     owner: "root"
     group: "root"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
+  with_subelements:
+    - "{{ ceilometer_services }}"
+    - group
+  when: inventory_hostname in groups[item.1]
 
 - name: Place the systemd init script
   template:
     src: "ceilometer-systemd-init.j2"
-    dest: "/etc/systemd/system/{{ item.value.service_name }}.service"
+    dest: "/etc/systemd/system/{{ item.0.service_name }}.service"
     mode: "0644"
     owner: "root"
     group: "root"
-  with_dict: "{{ ceilometer_services }}"
-  when: inventory_hostname in groups[item.value.group]
+  with_subelements:
+    - "{{ ceilometer_services }}"
+    - group
+  when: inventory_hostname in groups[item.1]
   notify:
     - Reload systemd daemon

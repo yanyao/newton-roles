@@ -23,39 +23,7 @@
       {% for item in nova_developer_constraints %}
       {{ item }}
       {% endfor %}
-  when:
-    - nova_developer_mode | bool
-  tags:
-    - nova-install
-    - nova-pip-packages
-
-- name: Clone requirements git repository
-  git:
-    repo: "{{ nova_requirements_git_repo }}"
-    dest: "/opt/requirements"
-    clone: yes
-    update: yes
-    version: "{{ nova_requirements_git_install_branch }}"
-  when:
-    - nova_developer_mode | bool
-  tags:
-    - nova-install
-    - nova-pip-packages
-
-- name: Add constraints to pip_install_options fact for developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }} --constraint /opt/developer-pip-constraints.txt --constraint /opt/requirements/upper-constraints.txt"
-  when:
-    - nova_developer_mode | bool
-  tags:
-    - nova-install
-    - nova-pip-packages
-
-- name: Set pip_install_options_fact when not in developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }}"
-  when:
-    - not nova_developer_mode | bool
+  when: nova_developer_mode | bool
   tags:
     - nova-install
     - nova-pip-packages
@@ -64,7 +32,9 @@
   pip:
     name: "{{ nova_requires_pip_packages | join(' ') }}"
     state: latest
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
@@ -73,51 +43,13 @@
     - nova-install
     - nova-pip-packages
 
-- name: Get local venv checksum
-  stat:
-    path: "/var/cache/{{ nova_venv_download_url | basename }}"
-    get_md5: False
-  when:
-    - not nova_developer_mode | bool
-  register: local_venv_stat
-  tags:
-    - nova-install
-    - nova-pip-packages
-
-- name: Get remote venv checksum
-  uri:
-    url: "{{ nova_venv_download_url | replace('tgz', 'checksum') }}"
-    return_content: True
-  when:
-    - not nova_developer_mode | bool
-  register: remote_venv_checksum
-  tags:
-    - nova-install
-    - nova-pip-packages
-
-# TODO: When project moves to ansible 2 we can pass this a sha256sum which will:
-#       a) allow us to remove force: yes
-#       b) allow the module to calculate the checksum of dest file which would
-#          result in file being downloaded only if provided and dest sha256sum
-#          checksums differ
 - name: Attempt venv download
   get_url:
     url: "{{ nova_venv_download_url }}"
     dest: "/var/cache/{{ nova_venv_download_url | basename }}"
-    force: yes
-  failed_when: false
-  register: get_venv
-  when:
-    - not nova_developer_mode | bool
-    - (local_venv_stat.stat.exists == False or
-        {{ local_venv_stat.stat.checksum is defined and local_venv_stat.stat.checksum != remote_venv_checksum.content | trim }})
-  tags:
-    - nova-install
-    - nova-pip-packages
-
-- name: Set nova get_venv fact
-  set_fact:
-    nova_get_venv: "{{ get_venv }}"
+    checksum: "sha1:{{ lookup('url', nova_venv_download_url | replace('tgz', 'checksum')) }}"
+  register: nova_get_venv
+  when: not nova_developer_mode | bool
   tags:
     - nova-install
     - nova-pip-packages
@@ -126,8 +58,7 @@
   file:
     path: "{{ nova_bin | dirname }}"
     state: absent
-  when:
-    - nova_get_venv | changed
+  when: nova_get_venv | changed
   tags:
     - nova-install
     - nova-pip-packages
@@ -160,13 +91,15 @@
     state: latest
     virtualenv: "{{ nova_bin | dirname }}"
     virtualenv_site_packages: "no"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ nova_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
-  when:
-    - nova_get_venv | failed or nova_developer_mode | bool
+  when: nova_developer_mode | bool
   notify: Restart nova services
   tags:
     - nova-install
@@ -174,10 +107,10 @@
 
 - name: Update virtualenv path
   command: >
-    virtualenv-tools --update-path=auto {{ nova_bin | dirname }}
+    virtualenv-tools --update-path=auto --reinitialize {{ nova_bin | dirname }}
   when:
     - not nova_developer_mode | bool
-    - nova_get_venv | success
+    - nova_get_venv | changed or nova_venv_dir | changed
   tags:
     - nova-install
     - nova-pip-packages

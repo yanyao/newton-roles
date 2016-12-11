@@ -30,65 +30,25 @@
       {% endfor %}
   when: tempest_developer_mode | bool
 
-- name: Clone requirements git repository
-  git:
-    repo: "{{ tempest_requirements_git_repo }}"
-    dest: "/opt/requirements"
-    clone: yes
-    update: yes
-    version: "{{ tempest_requirements_git_install_branch }}"
-  when: tempest_developer_mode | bool
-
-- name: Add constraints to pip_install_options fact for developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }} --constraint /opt/developer-pip-constraints.txt --constraint /opt/requirements/upper-constraints.txt"
-  when: tempest_developer_mode | bool
-
-- name: Set pip_install_options_fact when not in developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }}"
-  when: not tempest_developer_mode | bool
-
 - name: Install requires pip packages
   pip:
     name: "{{ tempest_requires_pip_packages | join(' ') }}"
     state: latest
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
 
-- name: Get local venv checksum
-  stat:
-    path: "/var/cache/{{ tempest_venv_download_url | basename }}"
-    get_md5: False
-  when: not tempest_developer_mode | bool
-  register: local_venv_stat
-
-- name: Get remote venv checksum
-  uri:
-    url: "{{ tempest_venv_download_url | replace('tgz', 'checksum') }}"
-    return_content: True
-  when: not tempest_developer_mode | bool
-  register: remote_venv_checksum
-
-# TODO: When project moves to ansible 2 we can pass this a sha256sum which will:
-#       a) allow us to remove force: yes
-#       b) allow the module to calculate the checksum of dest file which would
-#          result in file being downloaded only if provided and dest sha256sum
-#          checksums differ
 - name: Attempt venv download
   get_url:
     url: "{{ tempest_venv_download_url }}"
     dest: "/var/cache/{{ tempest_venv_download_url | basename }}"
-    force: yes
-  failed_when: false
+    checksum: "sha1:{{ lookup('url', tempest_venv_download_url | replace('tgz', 'checksum')) }}"
   register: tempest_get_venv
-  when:
-    - not tempest_developer_mode | bool
-    - (local_venv_stat.stat.exists == False or
-        {{ local_venv_stat.stat.checksum is defined and local_venv_stat.stat.checksum != remote_venv_checksum.content | trim }})
+  when: not tempest_developer_mode | bool
 
 - name: Remove existing venv
   file:
@@ -98,7 +58,9 @@
 
 # TODO(odyssey4me):
 # Once the execution of tempest no longer uses run_tempest.sh
-# then this task may be removed.
+# then this task may be removed. This task only executes when
+# the variable 'tempest_run' is a boolean false, which will be
+# the case in roles which are using the legacy method.
 - name: Get tempest from git
   git:
     repo: "{{ tempest_git_repo }}"
@@ -108,6 +70,7 @@
     update: "yes"
     accept_hostkey: "yes"
     force: "yes"
+  when: not tempest_run | bool
   register: git_clone
   until: git_clone | success
   retries: 5
@@ -134,19 +97,22 @@
     state: latest
     virtualenv: "{{ tempest_venv_bin | dirname }}"
     virtualenv_site_packages: "no"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ tempest_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
-  when: tempest_get_venv | failed or tempest_developer_mode | bool
+  when: tempest_developer_mode | bool
 
 - name: Update virtualenv path
   command: >
-    virtualenv-tools --update-path=auto {{ tempest_venv_bin | dirname }}
+    virtualenv-tools --update-path=auto --reinitialize {{ tempest_venv_bin | dirname }}
   when:
     - not tempest_developer_mode | bool
-    - tempest_get_venv | success
+    - tempest_get_venv | changed or tempest_venv_dir | changed
 
 - name: Get tempest plugins from git
   git:
@@ -172,7 +138,10 @@
     state: latest
     virtualenv: "{{ tempest_venv_bin | dirname }}"
     virtualenv_site_packages: "no"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ tempest_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   with_items: "{{ _test_requirements_stat.results }}"
   when: "{{ item.stat.exists }}"
   register: install_tempest_plugin_requirements
@@ -186,7 +155,10 @@
     state: latest
     virtualenv: "{{ tempest_venv_bin | dirname }}"
     virtualenv_site_packages: "no"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ tempest_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   with_items: "{{ tempest_plugins }}"
   register: install_tempest_plugins
   until: install_tempest_plugins | success

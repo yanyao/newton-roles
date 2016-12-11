@@ -32,18 +32,6 @@
   tags:
     - always
 
-- name: Check init system
-  command: cat /proc/1/comm
-  register: _pid1_name
-  tags:
-    - always
-
-- name: Set the name of pid1
-  set_fact:
-    pid1_name: "{{ _pid1_name.stdout }}"
-  tags:
-    - always
-
 - include: ceilometer_pre_install.yml
   tags:
     - ceilometer-install
@@ -71,4 +59,3 @@
   when: inventory_hostname == groups['ceilometer_api'][0]
   tags:
     - ceilometer-install
-

@@ -46,7 +46,7 @@ swift_system_shell: /bin/false
 swift_system_comment: swift test user
 swift_system_home_folder: "/var/lib/{{ swift_system_user_name }}"
 
-
+tempest_git_install_branch: 35b062ebb9e62bbd482fba20c3e7a7a43992db69
 tempest_bin: "/opt/tempest_{{ tempest_venv_tag }}/bin"
 tempest_pip_packages:
   - tempest

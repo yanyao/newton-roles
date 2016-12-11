@@ -1,5 +1,5 @@
 ---
-# Copyright 2015, Rackspace US, Inc.
+# Copyright 2016, Logan Vig <logan2211@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# There are currently no overrides required for the sahara role.
-# If you need sahara specific variable overries set them below and add
-# "-e @{toxinidir}/tests/sahara-overrides.yml \" to the ansible test run.
+- name: Clean up local get-pip.py
+  local_action:
+    module: file
+    path: "/tmp/get-pip.py"
+    state: absent
+  run_once: yes
+  tags:
+    - pip-install-cleanup
+
+- name: Clean up local install cache
+  local_action:
+    module: file
+    path: "{{ pip_tmp_packages }}"
+    state: absent
+  run_once: yes
+  tags:
+    - pip-install-cleanup
+
+- name: Clean up remote install files
+  file:
+    path: "{{ pip_tmp_packages }}"
+    state: absent
+  tags:
+  - pip-install-cleanup

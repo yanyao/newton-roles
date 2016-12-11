@@ -60,7 +60,10 @@
     virtualenv: "{{ swift_bin | dirname }}"
     virtualenv_site_packages: "no"
     virtualenv_command: "{{ swift_pypy_env | dirname }}/virtualenv"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ swift_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5

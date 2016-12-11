@@ -25,66 +25,31 @@
   when:
     - sahara_developer_mode | bool
 
-- name: Clone requirements git repository
-  git:
-    repo: "{{ sahara_requirements_git_repo }}"
-    dest: "/opt/requirements"
-    clone: yes
-    update: yes
-    version: "{{ sahara_requirements_git_install_branch }}"
-  when:
-    - sahara_developer_mode | bool
-
-- name: Add constraints to pip_install_options fact for developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }} --constraint /opt/developer-pip-constraints.txt --constraint /opt/requirements/upper-constraints.txt"
-  when:
-    - sahara_developer_mode | bool
-
-- name: Set pip_install_options_fact when not in developer mode
-  set_fact:
-    pip_install_options_fact: "{{ pip_install_options|default('') }}"
-  when:
-    - not sahara_developer_mode | bool
-
 - name: Install required pip packages
   pip:
     name: "{{ sahara_required_pip_packages | join(' ') }}"
     state: present
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
 
-- name: Get remote venv checksum
-  uri:
-    url: "{{ sahara_venv_download_url | replace('tgz', 'checksum') }}"
-    return_content: True
-  when:
-    - not sahara_developer_mode | bool
-  register: remote_venv_checksum
-
 - name: Attempt venv download
   get_url:
     url: "{{ sahara_venv_download_url }}"
     dest: "/var/cache/{{ sahara_venv_download_url | basename }}"
-    checksum: "sha1:{{ remote_venv_checksum.content }}"
-  ignore_errors: true
-  register: get_venv
-  when:
-    - not sahara_developer_mode | bool
-
-- name: Set sahara get_venv fact
-  set_fact:
-    sahara_get_venv: "{{ get_venv }}"
+    checksum: "sha1:{{ lookup('url', sahara_venv_download_url | replace('tgz', 'checksum')) }}"
+  register: sahara_get_venv
+  when: not sahara_developer_mode | bool
 
 - name: Remove existing venv
   file:
     path: "{{ sahara_bin | dirname }}"
     state: absent
-  when:
-    - sahara_get_venv | changed
+  when: sahara_get_venv | changed
 
 - name: Create sahara venv dir
   file:
@@ -109,19 +74,21 @@
     state: latest
     virtualenv: "{{ sahara_bin | dirname }}"
     virtualenv_site_packages: "no"
-    extra_args: "{{ pip_install_options_fact }}"
+    extra_args: >-
+      {{ sahara_developer_mode | ternary('--constraint /opt/developer-pip-constraints.txt', '') }}
+      {{ (pip_install_upper_constraints is defined) | ternary('--constraint ' + pip_install_upper_constraints | default(''),'') }}
+      {{ pip_install_options | default('') }}
   register: install_packages
   until: install_packages|success
   retries: 5
   delay: 2
-  when:
-    - sahara_get_venv | failed or sahara_developer_mode | bool
+  when: sahara_developer_mode | bool
   notify:
     - Restart sahara services
 
 - name: Update virtualenv path
   command: >
-    virtualenv-tools --update-path=auto {{ sahara_bin | dirname }}
+    virtualenv-tools --update-path=auto --reinitialize {{ sahara_bin | dirname }}
   when:
     - not sahara_developer_mode | bool
-    - sahara_get_venv | success
+    - sahara_get_venv | changed or sahara_venv_dir | changed
