@@ -272,6 +272,7 @@ use_virtio_for_bridges = True
 cpu_mode = {{ nova_cpu_mode }}
 virt_type = {{ nova_virt_type }}
 remove_unused_resized_minimum_age_seconds = {{ nova_remove_unused_resized_minimum_age_seconds }}
+volume_use_multipath = True
 
 {% if cinder_backends_rbd_inuse|bool or nova_libvirt_images_rbd_pool is defined %}
 rbd_user = {{ nova_ceph_client }}
