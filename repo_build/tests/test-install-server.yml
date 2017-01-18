@@ -60,10 +60,5 @@
       args:
         chdir: "/var/www/repo/openstackgit/keystone"
 
-    - name: Intentionally remote the tempest repo remote origin
-      shell: "git remote remove origin"
-      args:
-        chdir: "/var/www/repo/openstackgit/tempest"
-
   vars_files:
     - test-vars.yml

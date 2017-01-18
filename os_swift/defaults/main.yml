@@ -75,6 +75,7 @@ swift_middleware_list:
   - account-quotas
   - slo
   - dlo
+  - versioned_writes
   - proxy-logging
   - proxy-server
 

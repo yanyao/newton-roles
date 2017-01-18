@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Create clone process script
-  template:
-    src: "op-clone-script.sh.j2"
-    dest: "/opt/op-clone-script.sh"
+# TODO (odyssey4me): Remove in Pike
+- name: Remove clone process script (from Newton and before)
+  file:
+    path: "/opt/op-clone-script.sh"
+    state: absent
   tags:
     - repo-clone-repos
 
@@ -37,9 +38,33 @@
   tags:
     - repo-clone-repos
 
-- name: Run clone process script
-  shell: "bash /opt/op-clone-script.sh"
+- name: Clone git repositories asynchronously
   become: yes
   become_user: "{{ repo_build_service_user_name }}"
+  git:
+    repo: "{{ item['url'] }}"
+    dest: "{{ repo_build_git_dir }}/{{ item['name'] }}"
+    version: "{{ item['version'] }}"
+    force: yes
+  with_items: "{{ local_packages.results.0.item.remote_package_parts }}"
+  when: >
+    (not repo_build_git_selective | bool) or
+    ((groups[item['project_group']] is defined) and (groups[item['project_group']] | length > 0))
+  register: _git_clone
+  async: 1800
+  poll: 0
   tags:
     - repo-clone-repos
+
+- name: Wait for git clones to complete
+  become: yes
+  become_user: "{{ repo_build_service_user_name }}"
+  async_status:
+    jid: "{{ item['ansible_job_id'] }}"
+  register: _git_jobs
+  until: "{{ _git_jobs['finished'] | bool }}"
+  delay: 5
+  retries: 360
+  with_items: "{{ _git_clone['results'] }}"
+  when:
+    - item['ansible_job_id'] is defined
