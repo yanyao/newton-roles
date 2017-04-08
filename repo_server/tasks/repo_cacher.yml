@@ -26,6 +26,8 @@
   when:
     - ansible_pkg_mgr == 'yum'
     - repo_pkg_cache_enabled | bool
+  tags:
+    - repo_server-install
 
 - name: Install repo caching server packages (apt)
   apt:
@@ -39,19 +41,25 @@
   when:
     - ansible_pkg_mgr == 'apt'
     - repo_pkg_cache_enabled | bool
+  tags:
+    - repo_server-install
 
 - name: Create cache directory
   file:
-    path: "{{ repo_service_home_folder }}/repo/pkg-cache"
+    path: "{{ repo_pkg_cache_dir }}"
     state: "directory"
-    owner: "apt-cacher-ng"
+    owner: "{{ repo_pkg_cache_owner }}"
     group: "{{ repo_service_group_name }}"
     mode: "02775"
+  tags:
+    - repo_server-install
 
 - name: Stat the cache path
   stat:
     path: /var/cache/apt-cacher-ng
   register: acs
+  tags:
+    - repo_server-install
 
 - name: Remove cacher directory if its a directory
   file:
@@ -59,12 +67,16 @@
     state: "absent"
   when:
     - acs.stat.isdir is defined and acs.stat.isdir
+  tags:
+    - repo_server-install
 
 - name: Link cacher to the repo path
   file:
     src: "{{ repo_service_home_folder }}/repo/pkg-cache"
     dest: "/var/cache/apt-cacher-ng"
     state: "link"
+  tags:
+    - repo_server-install
 
 - name: Drop acng.conf
   template:
@@ -72,4 +84,3 @@
     dest: "/etc/apt-cacher-ng/acng.conf"
   notify:
     - reload acng
-

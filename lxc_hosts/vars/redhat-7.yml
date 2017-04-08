@@ -50,10 +50,13 @@ lxc_cache_map:
     - /etc/pki/rpm-gpg/
     - /etc/localtime
   cache_prep_commands: |
+    {{ lxc_cache_prep_pre_commands }}
     if [ -a /etc/resolv.conf ]; then
       mv /etc/resolv.conf /etc/resolv.conf.org
     fi
-    echo "nameserver {{ lxc_net_address }}" > /etc/resolv.conf
+    {% for resolver in lxc_cache_prep_dns %}
+    echo "nameserver {{ resolver }}" >> /etc/resolv.conf
+    {% endfor %}
     yum install -y {{ lxc_cache_distro_packages | join(' ') }}
     rm -f /usr/bin/python
     ln -s /usr/bin/python2.7 /usr/bin/python
@@ -75,6 +78,7 @@ lxc_cache_map:
     else
       rm -f /etc/resolv.conf
     fi
+    {{ lxc_cache_prep_post_commands }}
 
 lxc_cache_distro_packages:
   - ca-certificates
@@ -84,7 +88,7 @@ lxc_cache_distro_packages:
   - wget
   - tar
 
-pip_install_options: >
+lxc_hosts_pip_install_options: >
   --global-option=build_ext
   --global-option="-L/opt/lxc_embedded/x86_64-linux-gnu/"
   --global-option="-I/opt/lxc_embedded/include/"

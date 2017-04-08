@@ -21,6 +21,10 @@ lxc_cache_timeout: 86400
 # Options are 'present' and 'latest'
 lxc_hosts_package_state: "latest"
 
+# Optionally set the URL for the Ubuntu Trusty backports repository
+# lxc_package_repo_url: http://archive.ubuntu.com/ubuntu/
+lxc_package_repo_filename: "/etc/apt/sources.list.d/trusty-backports.list"
+
 # Mappings from Ansible reported architecture to distro release architecture
 lxc_architecture_mapping:
   x86_64: amd64
@@ -96,6 +100,15 @@ lxc_image_compression_ratio: 0
 #       dest: "/etc/issue"
 lxc_container_cache_files: []
 
+# DNS servers to use during cache preparation
+lxc_cache_prep_dns:
+  - "{{ lxc_net_address }}"
+
+# Custom shell commands to run before/after the LXC cache prep process has taken
+# place.
+lxc_cache_prep_pre_commands: '## pre command skipped ##'
+lxc_cache_prep_post_commands: '## post command skipped ##'
+
 # The DNS name of the LXD server to source the base container cache from
 lxc_image_cache_server: images.linuxcontainers.org
 
@@ -113,9 +126,13 @@ lxc_image_cache_secondary_keyserver: hkp://keyserver.ubuntu.com:80
 #   --arch CONTAINER_ARCH
 #   --force-cache
 #   --server SERVER_TO_GET_IMAGES_FROM
+lxc_cache_default_variant: default
+lxc_cache_download_template_extra_options: ""
 lxc_cache_download_template_options: >
   --dist {{ lxc_cache_map.distro }}
   --release {{ lxc_cache_map.release }}
   --arch {{ lxc_cache_map.arch }}
   --force-cache
   --server {{ lxc_image_cache_server }}
+  --variant {{ lxc_cache_default_variant }}
+  {{ lxc_cache_download_template_extra_options }}

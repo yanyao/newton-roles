@@ -36,6 +36,9 @@ plugin_dirs = {{ heat_plugin_dirs | join(',') }}
 # Default region name used to get services endpoints.
 region_name_for_services = {{ heat_service_region }}
 
+default_software_config_transport = POLL_SERVER_HEAT
+default_deployment_signal_transport = HEAT_SIGNAL
+
 [clients]
 endpoint_type = {{ heat_clients_endpoint }}
 
@@ -65,6 +68,11 @@ bind_port = {{ heat_watch_port }}
 
 [oslo_messaging_rabbit]
 rabbit_use_ssl = {{ rabbitmq_use_ssl }}
+
+{% if heat_service_publicuri_proto != heat_service_internaluri_proto %}
+[oslo_middleware]
+enable_proxy_headers_parsing = True
+{% endif %}
 
 # Ceilometer options
 {% if heat_ceilometer_enabled %}
@@ -112,3 +120,9 @@ auth_url = {{ keystone_service_adminurl }}
 user_domain_id = {{ heat_service_trustee_user_domain_id }}
 username = {{ heat_service_trustee_user_name }}
 password = {{ heat_service_trustee_password }}
+
+[volumes]
+# Indicate if cinder-backup service is enabled. This is a temporary workaround
+# until cinder-backup service becomes discoverable, see LP#1334856. (boolean
+# value)
+backups_enabled = {{ heat_cinder_backups_enabled }}

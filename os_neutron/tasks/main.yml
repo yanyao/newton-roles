@@ -16,11 +16,13 @@
 - name: Gather variables for each operating system
   include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
-    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-    - "{{ ansible_distribution | lower }}.yml"
-    - "{{ ansible_os_family | lower }}.yml"
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
   tags:
     - always
 
@@ -61,38 +63,39 @@
 
 - include: neutron_post_install.yml
   tags:
-    - neutron-install
     - neutron-config
 
 # neutron system services
 - include: neutron_init.yml
   tags:
-    - neutron-install
+    - neutron-config
 
 - include: calico_init.yml
   static: no
   when: neutron_plugin_type == 'ml2.calico'
   tags:
-    - neutron-install
+    - neutron-config
 
 - include: neutron_db_setup.yml
   when:
     - neutron_services['neutron-server']['group'] in group_names
     - inventory_hostname == groups[neutron_services['neutron-server']['group']][0]
   tags:
-    - neutron-install
+    - neutron-config
 
 - include: neutron_service_setup.yml
   when:
     - "'neutron_all' in group_names"
     - inventory_hostname == groups['neutron_all'][0]
   tags:
-    - neutron-install
+    - neutron-config
 
 - include: neutron_l3_ha.yml
   when:
     - neutron_services['neutron-l3-agent']['group'] in group_names
     - neutron_legacy_ha_tool_enabled | bool
+  tags:
+    - neutron-config
 
 - name: Flush handlers
   meta: flush_handlers

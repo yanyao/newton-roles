@@ -5,3 +5,6 @@
 {% for clone_item in local_packages.results.0.item.remote_package_parts -%}
 {{ repo_build_git_dir | basename }}/{{ clone_item['name'] }}
 {% endfor %}
+{% for item in manifest_venvs.stdout_lines %}
+{{ repo_build_venv_dir | basename }}/{{ repo_build_release_tag }}/{{ ansible_distribution | lower }}/{{ item }}
+{% endfor %}

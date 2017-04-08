@@ -16,8 +16,6 @@ glance variables when you begin using swift.
 
 This procedure requires the following:
 
--  OSA Kilo (v11)
-
 -  Object Storage v2.2.0
 
 #. Update the glance options in the
@@ -27,7 +25,7 @@ This procedure requires the following:
 
        # Glance Options
        glance_default_store: swift
-       glance_swift_store_auth_address: '{{ auth_identity_uri }}'
+       glance_swift_store_auth_address: '{{ keystone_service_internalurl }}'
        glance_swift_store_container: glance_images
        glance_swift_store_endpoint_type: internalURL
        glance_swift_store_key: '{{ glance_service_password }}'
@@ -39,7 +37,7 @@ This procedure requires the following:
 
    -  ``glance_swift_store_auth_address``: Set to the local
       authentication address using the
-      ``'{{ auth_identity_uri }}'`` variable.
+      ``'{{ keystone_service_internalurl }}'`` variable.
 
    -  ``glance_swift_store_container``: Set the container name.
 
@@ -63,4 +61,3 @@ This procedure requires the following:
 
        # cd /opt/openstack-ansible/playbooks
        # openstack-ansible os-glance-install.yml --tags "glance-config"
-

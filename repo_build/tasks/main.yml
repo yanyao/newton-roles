@@ -37,5 +37,9 @@
   tags:
     - repo-build-venvs
 
+- include: repo_index.yml
+  tags:
+    - repo-build-index
+
 - include: repo_package_sync.yml
   when: inventory_hostname != groups['repo_all'][0]

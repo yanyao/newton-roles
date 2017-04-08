@@ -13,18 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Stop rsyslog
-  service:
-    name: "rsyslog"
-    state: "stopped"
-  failed_when: false
-
 - name: Rsyslog Setup
   copy:
     src: "50-default.conf"
     dest: "/etc/rsyslog.d/50-default.conf"
     owner: "root"
     group: "root"
+  when: (groups['rsyslog_all'] is not defined) or (inventory_hostname not in groups['rsyslog_all'])
+  tags:
+    - rsyslog_client-install
+  notify:
+    - restart rsyslog
 
 - name: Check if log dir exists
   stat:
@@ -32,6 +31,8 @@
   when:
     - "{{ rsyslog_client_log_dir is defined }}"
   register: log_dir
+  tags:
+    - rsyslog_client-install
 
 - name: Find all log files
   shell: |
@@ -41,10 +42,16 @@
   when:
     - not log_dir | skipped
     - log_dir.stat.isdir is defined and log_dir.stat.isdir
+  tags:
+    # do not trigger ANSIBLE0013 as shell is indeed needed here
+    - skip_ansible_lint
+    - rsyslog_client-config
 
 - name: Union the log files
   set_fact:
     rsyslog_client_all_log_files: "{{ log_files.stdout_lines | default([]) | union(rsyslog_client_log_files) }}"
+  tags:
+    - rsyslog_client-config
 
 - name: Write rsyslog config for found log files
   template:
@@ -52,6 +59,11 @@
     dest: "/etc/rsyslog.conf"
     owner: "root"
     group: "root"
+  when: (groups['rsyslog_all'] is not defined) or (inventory_hostname not in groups['rsyslog_all'])
+  tags:
+    - rsyslog_client-config
+  notify:
+    - restart rsyslog
 
 - name: Write rsyslog target file
   template:
@@ -60,6 +72,10 @@
     owner: "root"
     group: "root"
   when: (rsyslog_client_all_log_files | length) > 0
+  tags:
+    - rsyslog_client-config
+  notify:
+    - restart rsyslog
 
 - name: Write log rotate file
   template:
@@ -68,6 +84,8 @@
     owner: "root"
     group: "root"
   when: (rsyslog_client_all_log_files | length) > 0
+  tags:
+    - rsyslog_client-config
 
 - name: Configure logrotate to compress logs by default
   lineinfile:
@@ -75,8 +93,5 @@
     regexp: "^#compress"
     line: "compress"
     backrefs: yes
-
-- name: Start rsyslog
-  service:
-    name: "rsyslog"
-    state: "started"
+  tags:
+    - rsyslog_client-install

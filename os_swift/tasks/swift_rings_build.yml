@@ -20,6 +20,8 @@
     owner: "{{ swift_system_user_name }}"
     group: "{{ swift_system_group_name }}"
     mode: "0700"
+  tags:
+    - swift-install
 
 - name: "Build ring-contents files"
   template:

@@ -100,7 +100,7 @@
     - V-38637
 
 - name: Check audit package contents for alterations with rpm (for V-38637)
-  shell: "rpmverify audit audit-libs | grep -v '\\.conf$' | wc -l"
+  shell: "rpmverify audit audit-libs | egrep -v '/(etc|var)' | wc -l"
   register: v38637_result
   changed_when: False
   when: ansible_pkg_mgr == 'yum'
@@ -242,6 +242,17 @@
     - auditd
     - cat2
     - V-38498
+
+- name: Remove system default audit.rules file
+  file:
+    path: /etc/audit/rules.d/audit.rules
+    state: absent
+  when:
+    - auditd_conf.stat.exists
+  notify:
+    - generate auditd rules
+  tags:
+    - always
 
 - name: Auditd rules (includes several STIGs)
   template:

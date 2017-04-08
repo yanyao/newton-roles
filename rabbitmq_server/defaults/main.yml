@@ -39,6 +39,9 @@ rabbitmq_release_version: "{{ _rabbitmq_release_version }}"
 rabbitmq_package_sha256: "{{ _rabbitmq_package_sha256 }}"
 rabbitmq_package_path: "{{ _rabbitmq_package_path }}"
 
+# Choose file, distro, external_repo for rabbitmq_install_method.
+rabbitmq_install_method: "file"
+
 # Name of the rabbitmq cluster
 rabbitmq_cluster_name: rabbitmq_cluster1
 
@@ -82,6 +85,9 @@ rabbitmq_management_rates_mode: basic
 
 # Precompile RabbitMQ with HiPE
 rabbitmq_hipe_compile: False
+
+# Disable non-TLS listeners
+rabbitmq_disable_non_tls_listeners: False
 
 # RabbitMQ policies
 # Used to tune performance characteristics of OpenStack messaging

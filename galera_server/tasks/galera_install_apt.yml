@@ -181,4 +181,4 @@
     path: "/usr/sbin/policy-rc.d"
     state: absent
   tags:
-    - galera-config
+    - galera_server-config

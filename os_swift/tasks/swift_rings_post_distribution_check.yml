@@ -35,6 +35,8 @@
     owner: "{{ swift_system_user_name }}"
     group: "{{ swift_system_group_name }}"
     mode: "0700"
+  tags:
+    - swift-install
 
 - name: "Ensure contents file matches ring after ring sync for account/container"
   command: "/etc/swift/scripts/swift_rings_check.py -f /etc/swift/scripts/{{ item[0] }}.contents{% if item[1] %} -r {{ item[1] }} {% endif %}"

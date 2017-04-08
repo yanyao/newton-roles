@@ -69,11 +69,6 @@ repo_build_venv_selective: yes
 #                   in Newton.
 # repo_build_pip_extra_index: "https://pypi.python.org/simple"
 
-# Toggle the use of Ubuntu Cloud Archive
-repo_build_uca_enable: True
-# Ubuntu Cloud Archive mirror URL
-uca_apt_repo_url: "http://ubuntu-cloud.archive.canonical.com/ubuntu"
-
 repo_build_timeout: 120
 repo_build_concurrency: "{{ (((ansible_processor_vcpus|default(1)) | int) > 4) | ternary(8, 4) }}"
 repo_build_venv_build_dir: "/tmp/openstack-venv-builder"

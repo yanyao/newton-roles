@@ -34,9 +34,6 @@ repo_build_distro_packages:
   - which
   - tar                     # required for /opt/op-venv-script.sh
 
-# required for liberasurecode-devel package
-repo_build_rdo_package: "https://rdoproject.org/repos/rdo-release.rpm"
-
 # workaround for https://github.com/pypa/virtualenv/issues/565
 repo_build_venv_command_options: >
   {{ virtualenv_bin }}

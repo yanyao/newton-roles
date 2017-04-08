@@ -23,9 +23,9 @@ Example Playbook
 Tags
 ^^^^
 
-This role supports two tags: ``swift-install`` and ``swift-config``
+This role supports two tags: ``swift-install`` and ``swift-config``.
 
-The ``swift-install`` tag can be used to install and upgrade.
+The ``swift-install`` tag can be used to install the software.
 
 The ``swift-config`` tag can be used to maintain configuration of the
-service.
+service, and do runtime operations.

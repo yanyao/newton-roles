@@ -13,6 +13,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+uca_enable: True
+uca_apt_repo_url: "http://ubuntu-cloud.archive.canonical.com/ubuntu"
+
+# If you want to use your own keys for UCA or RDO (instead of ubuntu or
+# CentOS defaults), please define user_external_repo_key dict with
+# keys/values corresponding to the ansible module arguments for your
+# distribution.
+#
+# For CentOS you'd define the following:
+#user_external_repo_key:
+#  key: https://my-repo.example.com/signing-key.asc
+# You could also use key: <keyid> from a keyserver, see ansible rpm_key doc.
+# Validate cert option from the module is also supported.
+# In CentOS, refusing to use the RDO package also forces you to add your own
+# repository. See below to know how to include your own repository.
+#
+# For Ubuntu, you'd define the following:
+#user_external_repo_key:
+#  url: https://my-repo.example.com/signing-key.asc
+# This leverages apt_key module, and passes the id, keyserver, and url argument.
+# Therefore, you can ensure the id of the key you want to import with id: <keyid>
+# or replace the source url with a keyserver.
+
+# If you have defined another set of keys you want to include, the chances are
+# high you want to give also your own repository.
+# For CentOS, define the following dict+key/values:
+#user_external_repo:
+#  name: "mymirror"
+#  baseurl: "http://mymirrorurl/baseurl/"
+#See also gpgcheck, gpgkey, description of the Ansible yum_repository module
+# For Ubuntu, define something like the following:
+#user_external_repo:
+#  repo: "deb http://mymirrorurl/ubuntu/ xenial main"
+#  filename: "mymirror"
+# If your mirror includes UCA mirroring, you may then want to disable using uca
+# by setting in your user variables uca_enable: False
+
 # Set the package install state for distribution packages
 # Options are 'present' and 'latest'
 pip_install_package_state: "latest"
@@ -35,6 +72,8 @@ pip_source_install_options: ""
 # The URL/path of a constraints file to use when installing the additional pip packages.
 #pip_install_upper_constraints: "http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt?h=stable/newton"
 
+pip_install_remove_distro_packages: []
+
 # This list var can be used to specify specific versions of pip, setuptools,
 # wheel and any other packages which must be installed when pip installs.
 pip_packages:
@@ -43,6 +82,7 @@ pip_packages:
 pip_required_pip_packages:
   - ndg-httpsclient # SSL SNI support
   - requests # SSL SNI support
+  - urllib3 # SSL SNI support
 
 ## APT Cache options
 cache_timeout: 600
@@ -77,3 +117,6 @@ pip_global_conf_overrides: {}
 # See the documentationat https://pip.pypa.io/en/stable/reference/pip
 # for details.
 pip_install_options: ""
+
+# Always force getting the latest get-pip script
+pip_get_pip_force: yes

@@ -38,7 +38,7 @@
     mode: "{{ item.mode|default('0755') }}"
   with_items:
     - { path: "/openstack", mode: "0755", owner: "root", group: "root" }
-    - { path: "/etc/glance" }
+    - { path: "/etc/glance", mode: "0750" }
     - { path: "/var/cache/glance" }
     - { path: "{{ glance_system_user_home }}" }
     - { path: "{{ glance_system_user_home }}/cache/api", mode: "0700" }

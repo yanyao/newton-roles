@@ -42,20 +42,18 @@
 
 - include: ceilometer_post_install.yml
   tags:
-    - ceilometer-install
     - ceilometer-config
 
 - include: ceilometer_init_common.yml
   tags:
-    - ceilometer-install
+    - ceilometer-config
 
 - include: ceilometer_apache.yml
   when: inventory_hostname in groups['ceilometer_api']
   tags:
-    - ceilometer-install
     - ceilometer-config
 
 - include: ceilometer_service_setup.yml
   when: inventory_hostname == groups['ceilometer_api'][0]
   tags:
-    - ceilometer-install
+    - ceilometer-config

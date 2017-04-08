@@ -30,15 +30,29 @@ Edit ``/etc/openstack_deploy/openstack_user_config.yml`` and configure
 the NFS client on each storage node if the NetApp backend is configured to use
 an NFS storage protocol.
 
-#. Add the ``cinder_backends`` stanza (which includes
-   ``cinder_nfs_client``) under the ``container_vars`` stanza for
-   each storage node:
+#. For each storage node, add one ``cinder_backends`` block underneath
+   the a new ``container_vars`` section. ``container_vars`` are used to
+   allow container/host individualized configuration. Each cinder back end
+   is defined with a unique key. For example, ``nfs-volume1``.
+   This later represents a unique cinder backend and volume type.
 
    .. code-block:: yaml
 
        container_vars:
          cinder_backends:
-           cinder_nfs_client:
+           nfs-volume1:
+
+#. Configure the appropriate cinder volume backend name:
+
+   .. code::
+
+      volume_backend_name: NFS_VOLUME1
+
+#. Configure the appropriate cinder NFS driver:
+
+   .. code::
+
+      volume_driver: cinder.volume.drivers.nfs.NfsDriver
 
 #. Configure the location of the file that lists shares available to the
    block storage service. This configuration file must include
@@ -46,21 +60,43 @@ an NFS storage protocol.
 
    .. code-block:: yaml
 
-       nfs_shares_config: SHARE_CONFIG
+       nfs_shares_config: FILENAME_NFS_SHARES
 
-   Replace ``SHARE_CONFIG`` with the location of the share
-   configuration file. For example, ``/etc/cinder/nfs_shares``.
+   Replace ``FILENAME_NFS_SHARES`` with the location of the share
+   configuration file. For example, ``/etc/cinder/nfs_shares_volume1``.
+
+#. Define mount options for the NFS mount. For example:
+
+   .. code::
+
+      nfs_mount_options: "rsize=65535,wsize=65535,timeo=1200,actimeo=120"
 
 #. Configure one or more NFS shares:
 
    .. code-block:: yaml
 
        shares:
-          - { ip: "NFS_HOST", share: "NFS_SHARE" }
+          - { ip: "HOSTNAME", share: "PATH_TO_NFS_VOLUME" }
 
-   Replace ``NFS_HOST`` with the IP address or hostname of the NFS
-   server, and the ``NFS_SHARE`` with the absolute path to an existing
-   and accessible NFS share.
+   Replace ``HOSTNAME`` with the IP address or hostname of the NFS
+   server, and the ``PATH_TO_NFS_VOLUME`` with the absolute path to an
+   existing and accessible NFS share (excluding the IP address or hostname).
+
+The following is a full configuration example of a cinder NFS backend
+named NFS1. The cinder playbooks will automatically add a custom
+``volume-type`` and ``nfs-volume1`` as in this example:
+
+   .. code::
+
+     container_vars:
+       cinder_backends:
+         nfs-volume1:
+           volume_backend_name: NFS_VOLUME1
+           volume_driver: cinder.volume.drivers.nfs.NfsDriver
+           nfs_shares_config: /etc/cinder/nfs_shares_volume1
+           nfs_mount_options: "rsize=65535,wsize=65535,timeo=1200,actimeo=120"
+           shares:
+           - { ip: "1.2.3.4", share: "/vol1" }
 
 Backup
 ~~~~~~
@@ -360,6 +396,90 @@ integration with cinder (nova and glance included):
 .. _OpenStack-Ansible and Ceph Working Example: https://www.openstackfaq.com/openstack-ansible-ceph/
 
 
+Configuring cinder to use Dell EqualLogic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To use the Dell EqualLogic volume driver as a back end, edit the
+``/etc/openstack_deploy/openstack_user_config.yml`` file and
+configure the storage nodes that will use it.
+
+Define the following parameters.
+
+#. Add ``dellqlx`` stanza under the ``cinder_backends`` for each
+   storage node:
+
+   .. code-block:: yaml
+
+        cinder_backends:
+          delleqlx:
+
+#. Specify volume back end name:
+
+   .. code-block:: yaml
+
+        volume_backend_name: DellEQLX_iSCSI
+
+#. Use Dell EQLX San ISCSI driver:
+
+   .. code-block:: yaml
+
+        volume_driver: cinder.volume.drivers.eqlx.DellEQLSanISCSIDriver
+
+#. Specify the SAN IP address:
+
+   .. code-block:: yaml
+
+        san_ip: ip_of_dell_storage
+
+#. Specify SAN username (Default: grpadmin):
+
+   .. code-block:: yaml
+
+        san_login: grpadmin
+
+#. Specify the SAN password:
+
+   .. code-block:: yaml
+
+       san_password: password
+
+#. Specify the group name for pools (Default: group-0):
+
+   .. code-block:: yaml
+
+       eqlx_group_name: group-0
+
+#. Specify the pool where Cinder will create volumes and snapshots
+   (Default: default):
+
+   .. code-block:: yaml
+
+       eqlx_pool: default
+
+#. Ensure the ``openstack_user_config.yml`` configuration is
+   accurate:
+
+   .. code-block:: yaml
+
+       storage_hosts:
+         Infra01:
+           ip: infra_host_ip
+           container_vars:
+             cinder_backends:
+               limit_container_types: cinder_volume
+               delleqlx:
+                 volume_backend_name: DellEQLX_iSCSI
+                 volume_driver: cinder.volume.drivers.eqlx.DellEQLSanISCSIDriver
+                 san_ip: ip_of_dell_storage
+                 san_login: grpadmin
+                 san_password: password
+                 eqlx_group_name: group-0
+                 eqlx_pool: default
+
+.. note:: For more details about available configuration options,
+          see http://docs.openstack.org/newton/config-reference/block-storage/drivers/dell-equallogic-driver.html
+
+
 Configuring cinder to use a NetApp appliance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -407,9 +527,9 @@ each storage node that will use it.
 
    .. code-block:: yaml
 
-       nfs_shares_config: SHARE_CONFIG
+       nfs_shares_config: FILENAME_NFS_SHARES
 
-   Replace ``SHARE_CONFIG`` with the location of the share
+   Replace ``FILENAME_NFS_SHARES`` with the location of the share
    configuration file. For example, ``/etc/cinder/nfs_shares``.
 
 #. Configure the server:
@@ -483,3 +603,27 @@ each storage node that will use it.
    The ``cinder-volume.yml`` playbook will automatically install the
    ``nfs-common`` file across the hosts, transitioning from an LVM to a
    NetApp back end.
+
+Configuring cinder qos specs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deployers may optionally define the variable ``cinder_qos_specs``
+to create qos specs.  This variable is a list of dictionaries that
+contain the options for each qos spec.  cinder volume-types may be
+assigned to a qos spec by defining the key ``cinder_volume_types`` in
+the desired qos spec dictionary.
+
+.. code-block:: console
+
+    - name: high-iops
+      options:
+        consumer: front-end
+        read_iops_sec: 2000
+        write_iops_sec: 2000
+      cinder_volume_types:
+        - volumes-1
+        - volumes-2
+    - name: low-iops
+      options:
+        consumer: front-end
+        write_iops_sec: 100

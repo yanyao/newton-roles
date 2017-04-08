@@ -110,6 +110,11 @@ libvirt_vif_type = ethernet
 vif_plugging_timeout = 10
 vif_plugging_is_fatal = False
 
+{% if nova_pci_passthrough_whitelist  %}
+# PCI Passthrough
+pci_passthrough_whitelist = "{{ nova_pci_passthrough_whitelist }}"
+{% endif %}
+
 # Hypervisor
 default_ephemeral_format = ext4
 
@@ -254,7 +259,7 @@ rabbit_use_ssl = {{ nova_rabbitmq_use_ssl }}
 
 {% if nova_virt_type == 'ironic' %}
 [ironic]
-username = {{ ironic_service_name }}
+username = {{ ironic_service_user_name }}
 password = {{ ironic_service_password }}
 project_name = {{ ironic_service_project_name }}
 user_domain_name = {{ ironic_service_domain_name | default("Default") }}
@@ -276,7 +281,6 @@ use_virtio_for_bridges = True
 cpu_mode = {{ nova_cpu_mode }}
 virt_type = {{ nova_virt_type }}
 remove_unused_resized_minimum_age_seconds = {{ nova_remove_unused_resized_minimum_age_seconds }}
-volume_use_multipath = True
 
 {% if cinder_backends_rbd_inuse|bool or nova_libvirt_images_rbd_pool is defined %}
 rbd_user = {{ nova_ceph_client }}

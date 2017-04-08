@@ -13,20 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Add Ubuntu Cloud Archive keyring
-  apt:
-    pkg: ubuntu-cloud-keyring
-    state: "{{ repo_build_package_state }}"
-  register: add_uca_keys
-  when: repo_build_uca_enable | bool
-
-- name: Add Ubuntu Cloud Archive Repository
-  apt_repository:
-    repo: "{{ uca_repo }}"
-    state: present
-  register: add_uca_repo
-  when: repo_build_uca_enable | bool
-
 - name: Drop lxc-net override file
   template:
     src: manual-init.override.j2

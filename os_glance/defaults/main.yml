@@ -59,6 +59,7 @@ glance_additional_stores:
   - cinder
 glance_flavor: "{% if glance_default_store == 'rbd' %}keystone{% else %}keystone+cachemanagement{% endif %}"
 glance_show_image_direct_url: "{{ glance_default_store == 'rbd' }}"
+glance_show_multiple_locations: "{{ glance_default_store == 'rbd' }}"
 
 
 ## API options

@@ -13,6 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+- name: Drop limits config (upstart)
+  template:
+    src: "upstart.limits.conf.j2"
+    dest: "/etc/security/limits.d/99-limits.conf"
+  notify:
+    - Reload upstart init scripts
+
 - name: Place the init script
   template:
     src: "swift-upstart-init.j2"

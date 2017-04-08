@@ -20,6 +20,7 @@
     system: "yes"
   tags:
     - pkg-repo-group
+    - repo_server-install
 
 - name: Remove old key file(s) if found
   file:
@@ -33,6 +34,7 @@
   tags:
     - repo-key
     - repo-key-create
+    - repo_server-install
 
 - name: Create the nginx system user
   user:
@@ -48,6 +50,7 @@
     - pkg-repo-user
     - repo-key
     - repo-key-create
+    - repo_server-install
 
 - name: File and directory setup (non-root user)
   file:
@@ -77,23 +80,50 @@
       mode: "0775"
   tags:
     - pkg-repo-dirs
+    - repo_server-install
+
+- name: Drop repo pre/post command script
+  template:
+    src: repo_prepost_cmd.sh.j2
+    dest: "{{ repo_service_home_folder }}/repo/repo_prepost_cmd.sh"
+    mode: "0750"
+    owner: "root"
+    group: "root"
+  tags:
+    - pkg-repo-config
+  when:
+    - ansible_service_mgr == 'systemd'
+
+- name: Drop repo pre/post command script
+  template:
+    src: repo_prepost_cmd_upstart.sh.j2
+    dest: "{{ repo_service_home_folder }}/repo/repo_prepost_cmd.sh"
+    mode: "0750"
+    owner: "root"
+    group: "root"
+  tags:
+    - pkg-repo-config
+  when:
+    - ansible_service_mgr == 'upstart'
 
 - name: Check if the git folder exists already
   stat:
-    path: "{{ repo_service_home_folder }}/repo/openstackgit"
+    path: "{{ repo_git_cache_dir }}"
   register: _git_folder
   tags:
     - pkg-repo-dirs
+    - repo_server-install
 
 - name: Git service data folder setup
   file:
-    path: "{{ (_git_folder.stat.exists and _git_folder.stat.islnk) | ternary(_git_folder.stat.lnk_source, repo_service_home_folder + '/repo/openstackgit') }}"
+    path: "{{ (_git_folder.stat.exists and _git_folder.stat.islnk) | ternary(_git_folder.stat.lnk_source, repo_git_cache_dir) }}"
     state: "directory"
     owner: "{{ repo_service_user_name }}"
     group: "{{ repo_service_group_name }}"
     recurse: true
   tags:
     - pkg-repo-dirs
+    - repo_server-install
 
 - name: File and directory setup (root user)
   file:
@@ -117,6 +147,8 @@
     - path: "/etc/nginx/sites-enabled"
       state: "directory"
       mode: "0644"
+  tags:
+    - repo_server-install
 
 - name: Drop NGINX configuration files
   template:
@@ -131,6 +163,7 @@
   tags:
     - pkg-repo-nginx
     - pkg-repo-config
+    - repo_server-config
 
 - name: Enable openstack-slushee site
   file:
@@ -142,6 +175,7 @@
   tags:
     - pkg-repo-nginx
     - pkg-repo-config
+    - repo_server-config
 
 - name: Place git daemon upstart init script
   template:
@@ -175,3 +209,4 @@
     - reload git socket
   tags:
     - git-daemon-init
+    - repo_server-config

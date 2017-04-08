@@ -16,11 +16,13 @@
 - name: Gather variables for each operating system
   include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
-    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-    - "{{ ansible_distribution | lower }}.yml"
-    - "{{ ansible_os_family | lower }}.yml"
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
   tags:
     - always
 
@@ -39,15 +41,30 @@
     - nova-virt-detect
 
 - include: nova_pre_install.yml
+  tags:
+    - nova-install
+
 - include: nova_install.yml
+  tags:
+    - nova-install
+
 - include: nova_post_install.yml
+  tags:
+    - nova-config
+
 - include: nova_init_common.yml
+  tags:
+    - nova-config
 
 - include: nova_db_setup.yml
   when: inventory_hostname == groups['nova_api_os_compute'][0]
+  tags:
+    - nova-config
 
 - include: nova_service_setup.yml
   when: inventory_hostname == groups['nova_api_os_compute'][0]
+  tags:
+    - nova-config
 
 - include: nova_compute.yml
   when: inventory_hostname in groups['nova_compute']

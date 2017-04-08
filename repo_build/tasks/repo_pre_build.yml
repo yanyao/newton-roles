@@ -25,22 +25,23 @@
     - repo-clean-workspace
 
 - name: Register os-release files
-  command: "find {{ repo_build_release_path }}/{{ repo_build_release_tag }} -name '{{ item }}'"
+  find:
+    paths: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}"
+    patterns:
+      - "*{{ ansible_architecture | lower }}.whl"
+      - "*none-any.whl"
+      - "*.in"
+      - "*.html"
+      - "*.txt"
   register: os_release_files
-  with_items:
-    - "*{{ ansible_architecture | lower }}.whl"
-    - "*none-any.whl"
-    - "*.in"
-    - "*.html"
-    - "*.txt"
   tags:
     - repo-clean-workspace
 
 - name: Ensure os-release files are cleaned up
   file:
-    path: "{{ item }}.path"
+    path: "{{ item.path }}"
     state: "absent"
-  with_items: "{{ os_release_files.results }}"
+  with_items: "{{ os_release_files.files }}"
   tags:
     - repo-clean-workspace
 

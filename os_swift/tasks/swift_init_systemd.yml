@@ -54,3 +54,4 @@
   when: inventory_hostname in groups[item.value.group]
   notify:
     - Reload systemd daemon
+

@@ -90,19 +90,3 @@
     mode: "0755"
     owner: "root"
     group: "root"
-
-- name: Configure soft file limits
-  lineinfile:
-    dest: "/etc/security/limits.conf"
-    regexp: "^{{ swift_system_user_name }}.*soft.*nofile.*"
-    state: "present"
-    line: "{{ swift_system_user_name }}\tsoft\tnofile\t\t{{ swift_soft_open_file_limits }}"
-    insertbefore: "^# End of file"
-
-- name: Configure hard file limits
-  lineinfile:
-    dest: "/etc/security/limits.conf"
-    regexp: "^{{ swift_system_user_name }}.*hard.*nofile.*"
-    state: "present"
-    line: "{{ swift_system_user_name }}\thard\tnofile\t\t{{ swift_hard_open_file_limits }}"
-    insertbefore: "^# End of file"

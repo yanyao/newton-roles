@@ -16,11 +16,13 @@
 - name: Gather variables for each operating system
   include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
-    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-    - "{{ ansible_distribution | lower }}.yml"
-    - "{{ ansible_os_family | lower }}.yml"
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      skip: true
   tags:
     - always
 
@@ -71,7 +73,6 @@
     - inventory_hostname in groups['swift_hosts']
     - swift_do_setup | bool
   tags:
-    - swift-install
     - swift-config
 
 - include: swift_proxy_hosts.yml
@@ -80,11 +81,10 @@
     - swift_do_setup | bool
   tags:
     - swift-config
-    - swift-install
 
 - include: swift_init_common.yml
   tags:
-    - swift-install
+    - swift-config
 
 - include: swift_service_setup.yml
   when:
@@ -92,7 +92,7 @@
     - '"keystoneauth" in swift_middleware_list'
     - swift_do_setup | bool
   tags:
-    - swift-install
+    - swift-config
 
 - include: swift_key_setup.yml
   static: no
@@ -104,8 +104,8 @@
   static: no
   when: swift_do_sync | bool
   tags:
-    - swift-install
     - swift-config
+    - swift-rings
 
 - name: Flush handlers
   meta: flush_handlers
@@ -114,4 +114,4 @@
   static: no
   when: swift_do_sync | bool
   tags:
-    - always
+    - swift-config

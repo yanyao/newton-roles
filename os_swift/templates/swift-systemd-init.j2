@@ -8,6 +8,7 @@ After=network.target
 Type=simple
 User={{ swift_system_user_name }}
 Group={{ swift_system_group_name }}
+LimitNOFILE={{ swift_soft_open_file_limits }}:{{ swift_hard_open_file_limits }}
 
 {% if item.value.program_override is defined %}
 ExecStart={{ item.value.program_override }} {{ item.value.program_config_options|default('') }}

@@ -1,0 +1,57 @@
+---
+# Copyright 2017, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Index all manifest wheels
+  shell: "ls -1 *.whl"
+  args:
+    chdir: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}"
+  changed_when: false
+  register: manifest_wheels
+  tags:
+    - repo-index-links
+    - repo-create-release-manifest
+    # don't trigger ANSIBLE0013 as shell is indeed required here
+    - skip_ansible_lint
+
+- name: Index all manifest venvs
+  shell: "ls -1"
+  args:
+    chdir: "{{ repo_build_venv_dir }}/{{ repo_build_release_tag }}/{{ ansible_distribution | lower }}"
+  register: manifest_venvs
+  tags:
+    - repo-index-links
+    - repo-create-release-manifest
+    # don't trigger ANSIBLE0013 as shell is indeed required here
+    - skip_ansible_lint
+
+- name: Create release manifest
+  template:
+    src: "manifest.in.j2"
+    dest: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}/MANIFEST.in"
+  tags:
+    - repo-create-release-manifest
+
+- name: Create absolute requirements
+  template:
+    src: "requirements_absolute_requirements.txt.j2"
+    dest: "{{ repo_build_release_path }}/{{ repo_build_release_tag }}/requirements_absolute_requirements.txt"
+  tags:
+    - repo-create-absolute-requirements
+
+# TODO(odyssey4me): Remove this in Pike
+- name: Remove global links index file
+  file:
+    path: "{{ repo_build_global_links_path }}/index.html"
+    state: absent

@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+{{ swift_system_user_name }} hard nofile {{ swift_hard_open_file_limits }}
+{{ swift_system_user_name }} soft nofile {{ swift_soft_open_file_limits }}
+
